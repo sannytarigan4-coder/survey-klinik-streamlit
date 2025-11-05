@@ -208,33 +208,32 @@ st.sidebar.title("📌 Navigasi")
 # --- UBAH BAGIAN INI ---
 halaman = st.sidebar.selectbox("Pilih Halaman", [ "Formulir Survei","Beranda", "Tentang Klinik", "Admin Dashboard"])
 
-# Halaman Formulir Survei
+# --- HALAMAN FORMULIR SURVEI ---
 if halaman == "Formulir Survei":
     st.title("📝 Formulir Survei Kepuasan Pasien")
-
-    layanan = st.selectbox(
-        "Silakan pilih jenis layanan yang Anda gunakan:",
-        ["Umum", "BPJS"],
-        key="pilihan_layanan"
-    )
-    st.markdown("---")
-
-
-    if st.form("form_survei"):
+    
+ # ⛳️ Pakai WITH, bukan IF
+    with st.form("form_survei"):
         st.subheader("Bagian A. Data Diri Responden")
-        kolom1, kolom2, kolom3 = st.columns(3)
-        with kolom1:
-            nama = st.text_input("Nama Lengkap")
-        with kolom2:
-            usia = st.radio("Usia", ["Dibawah 20 tahun", "21–30 tahun", "31–40 tahun", "41–50 tahun", "Diatas 50 tahun"])
-        with kolom3:
-            jenis_kelamin = st.selectbox("Jenis Kelamin", ["Laki-laki", "Perempuan"])
+
+        # Urut ke bawah (tanpa columns)
+        nama = st.text_input("Nama Lengkap")
+        usia = st.radio("Usia", ["Dibawah 20 tahun", "21–30 tahun", "31–40 tahun", "41–50 tahun", "Diatas 50 tahun"])
+        jenis_kelamin = st.selectbox("Jenis Kelamin", ["Laki-laki", "Perempuan"])
+
+        st.markdown("---")
+
+        # Pilihan layanan DIPINDAH KE SINI (di dalam form, setelah data diri)
+        layanan = st.selectbox(
+            "Silakan pilih jenis layanan yang Anda gunakan:",
+            ["Umum", "BPJS"],
+            key="pilihan_layanan"
+        )
 
         st.markdown("---")
         
-        # Gunakan dictionary untuk mengumpulkan semua jawaban
+        # Pertanyaan (contoh ringkas)
         jawaban_dict = {}
-        
         if layanan == "Umum":
             st.subheader("Bagian B1. Kepuasan Pelayanan – LAYANAN UMUM")
             jawaban_dict["u1"] = skala_emosi("Dokter menjelaskan kondisi dan pengobatan dengan jelas.", "u1")
@@ -248,8 +247,9 @@ if halaman == "Formulir Survei":
             jawaban_dict["u9"] = skala_emosi("Secara keseluruhan, saya puas terhadap pelayanan pasien umum.", "u9")
             jawaban_dict["u10"] = skala_emosi("Saya bersedia datang kembali dan merekomendasikan klinik ini.", "u10")
         
-        else: # Ini berarti layanan == "BPJS"
-            st.subheader("B2. Kepuasan Pelayanan – LAYANAN BPJS")
+        else:
+            st.subheader("Bagian B2. Kepuasan Pelayanan – LAYANAN BPJS")
+            jawaban_dict["b1"] = skala_emosi("Proses pendaftaran pasien BPJS mudah dan cepat.", "b1")
             jawaban_dict["b1"] = skala_emosi("Proses pendaftaran pasien BPJS mudah dan cepat.", "b1")
             jawaban_dict["b2"] = skala_emosi("Petugas BPJS memberikan informasi yang jelas dan membantu.", "b2")
             jawaban_dict["b3"] = skala_emosi("Dokter memberikan pelayanan yang ramah dan menjelaskan pengobatan dengan baik.", "b3")
@@ -262,23 +262,23 @@ if halaman == "Formulir Survei":
             jawaban_dict["b10"] = skala_emosi("Saya bersedia datang kembali dan merekomendasikan klinik ini.", "b10")
 
         st.markdown("---")
-        st.subheader("C. Keseluruhan Pengalaman")
+        st.subheader("Bagian C. Keseluruhan Pengalaman")
         jawaban_dict["k1"] = skala_emosi("Saya merasa Klinik Pratama Theresia memberikan pelayanan kesehatan yang baik secara keseluruhan.", "k1")
         jawaban_dict["k2"] = skala_emosi("Saya akan kembali menggunakan layanan di klinik ini di masa mendatang.", "k2")
         jawaban_dict["k3"] = skala_emosi("Saya akan merekomendasikan Klinik Theresia kepada keluarga atau teman.", "k3")
 
         st.markdown("---")
-        st.subheader("D. Saran dan Masukan")
-        saran = st.text_area("Silakan tuliskan saran Anda untuk peningkatan layanan Klinik Pratama Theresia:", key="saran_input")
+        st.subheader("Bagian D. Saran dan Masukan")
+        saran = st.text_area("Tuliskan saran Anda:", key="saran_input")
 
+        # 🚨 Tombol submit HARUS di dalam blok form
         submit = st.form_submit_button("Kirim Survei")
 
     # Logika submit sekarang berada di luar form
     if submit:
-        # 1. Simpan dulu ke Database
         berhasil_simpan = simpan_ke_db(
-            nama, jenis_kelamin, usia, layanan, 
-            jawaban_dict, # Kirim dict lengkap
+            nama, jenis_kelamin, usia, layanan,
+            jawaban_dict,
             saran
         )
         

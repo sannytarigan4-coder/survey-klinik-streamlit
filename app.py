@@ -1,6 +1,6 @@
 # app.py
 # ------------------------------------------------------------
-# Survei Klinik Theresia - Streamlit App (tanpa subfolder assets)
+# Survei Klinik Theresia - Streamlit App (revisi path aset & DB)
 # ------------------------------------------------------------
 
 import os
@@ -21,16 +21,16 @@ st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 
 # -------------------- PATH ABSOLUT PROYEK --------------------
 BASE_DIR = Path(__file__).resolve().parent
+ASSETS = BASE_DIR / "assets"
 DB_PATH = BASE_DIR / "survei_klinik.db"
 
-def file_path(name: str) -> str:
+def asset_path(name: str) -> str:
     """
-    Menghasilkan path absolut untuk file (gambar/video) yang berada SEFOLDER dengan app.py.
-    Jika tidak ada, hentikan app agar error jelas.
+    Menghasilkan path absolut untuk aset. Jika tidak ada, hentikan app agar error jelas.
     """
-    p = BASE_DIR / name
+    p = ASSETS / name
     if not p.exists():
-        st.error(f"File tidak ditemukan: {p}")
+        st.error(f"File asset tidak ditemukan: {p}")
         st.stop()
     return str(p)
 
@@ -258,7 +258,7 @@ menu_pages = ["Formulir Survei", "Beranda", "Tentang Klinik", "Admin Dashboard"]
 with st.sidebar:
     c1, c2, c3 = st.columns([0.5, 5, 0.5])
     with c2:
-        st.image(file_path("logo.jpeg"), width=250)  # logo sidebar
+        st.image(asset_path("logo.jpeg"), width=250)  # logo sidebar
     st.markdown("<br>", unsafe_allow_html=True)
 
 for page in menu_pages:
@@ -266,7 +266,8 @@ for page in menu_pages:
         st.session_state.halaman = page
 
 # -------------------- HEADER GLOBAL --------------------------
-st.image(file_path("logo.jpeg"), width=100)  # logo header tiap halaman
+# logo header tiap halaman
+st.image(asset_path("logo.jpeg"), width=100)
 st.markdown("---")
 
 # -------------------- HALAMAN: FORMULIR ----------------------
@@ -373,15 +374,15 @@ if halaman == "Formulir Survei":
 
 # -------------------- HALAMAN: BERANDA -----------------------
 elif halaman == "Beranda":
-    st.image(file_path("staf.jpg"), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
+    st.image(asset_path("staf.jpg"), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
     st.markdown("---")
 
     # Video profil (opsional)
-    vid = BASE_DIR / "video.mp4"
-    if vid.exists():
+    vid_path = ASSETS / "video.mp4"
+    if vid_path.exists():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.video(str(vid), start_time=0, format="video/mp4", width=350)
+            st.video(str(vid_path), start_time=0, format="video/mp4", width=350)
     else:
         st.info("Video profil belum tersedia.")
 
@@ -398,13 +399,13 @@ elif halaman == "Tentang Klinik":
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.image(file_path("ftbersama.jpg"), width=300)
+        st.image(asset_path("ftbersama.jpg"), width=300)
     with col2:
-        st.image(file_path("penerima.jpg"), width=310)
+        st.image(asset_path("penerima.jpg"), width=310)
     with col3:
-        st.image(file_path("piagam.jpg"), width=280)
+        st.image(asset_path("piagam.jpg"), width=280)
     with col4:
-        st.image(file_path("plakat.jpg"), width=300)
+        st.image(asset_path("plakat.jpg"), width=300)
 
     st.markdown("""
         <div style="text-align: center; margin-bottom: 80px;">

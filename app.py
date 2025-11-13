@@ -1,15 +1,12 @@
-# app.py
-# ------------------------------------------------------------
-# Survei Klinik Theresia - Streamlit App (revisi path aset & DB)
-# ------------------------------------------------------------
-
+# app.py # ------------------------------------------------------------ 
+# Survei Klinik Theresia - Streamlit App (revisi path aset & DB) 
+# ------------------------------------------------------------ 
 import os
 import io
 import base64
 import datetime
 import sqlite3
 from pathlib import Path
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -21,18 +18,11 @@ st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 
 # -------------------- PATH ABSOLUT PROYEK --------------------
 BASE_DIR = Path(__file__).resolve().parent
-ASSETS = BASE_DIR / "assets"
+ASSETS = BASE_DIR / "assets"  # You may not need this if assets are in the same directory
 DB_PATH = BASE_DIR / "survei_klinik.db"
 
-def asset_path(name: str) -> str:
-    """
-    Menghasilkan path absolut untuk aset. Jika tidak ada, hentikan app agar error jelas.
-    """
-    p = ASSETS / name
-    if not p.exists():
-        st.error(f"File asset tidak ditemukan: {p}")
-        st.stop()
-    return str(p)
+# -------------------- REMOVE asset_path FUNCTION --------------------
+# Remove the asset_path function since you're directly using images from the same directory.
 
 # -------------------- SETUP SESSION STATE --------------------
 if "halaman" not in st.session_state:
@@ -116,7 +106,9 @@ div[data-testid="stSidebar"] button:hover {
 [data-testid="stAppViewContainer"] {
     background-color: #f7fbff;
 }
-hr { border: 1px solid #bbdefb !important; }
+hr {
+    border: 1px solid #bbdefb !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -212,11 +204,7 @@ def load_data_from_db():
         conn.close()
 
 def prepare_cluster_data(df_jawaban):
-    """
-    Ubah jawaban (long) jadi per responden (wide) untuk clustering.
-    - skor_layanan: rata2 pertanyaan yang diawali u... atau b...
-    - skor_keseluruhan: rata2 pertanyaan k...
-    """
+    """Ubah jawaban (long) jadi per responden (wide) untuk clustering."""
     if df_jawaban.empty:
         return pd.DataFrame(columns=["responden_id", "skor_layanan", "skor_keseluruhan"])
 
@@ -254,25 +242,23 @@ def prepare_cluster_data(df_jawaban):
 
 # -------------------- NAVIGATION (SIDEBAR) -------------------
 menu_pages = ["Formulir Survei", "Beranda", "Tentang Klinik", "Admin Dashboard"]
-
 with st.sidebar:
     c1, c2, c3 = st.columns([0.5, 5, 0.5])
     with c2:
-        st.image(asset_path("logo.jpeg"), width=250)  # logo sidebar
-    st.markdown("<br>", unsafe_allow_html=True)
+        st.image("logo.jpeg", width=250)  # direct image reference
 
-for page in menu_pages:
-    if st.sidebar.button(page, key=f"nav_{page}", use_container_width=True):
-        st.session_state.halaman = page
+    st.markdown("<br>", unsafe_allow_html=True)
+    for page in menu_pages:
+        if st.sidebar.button(page, key=f"nav_{page}", use_container_width=True):
+            st.session_state.halaman = page
 
 # -------------------- HEADER GLOBAL --------------------------
 # logo header tiap halaman
-st.image(asset_path("logo.jpeg"), width=100)
+st.image("logo.jpeg", width=100)  # direct image reference
 st.markdown("---")
 
 # -------------------- HALAMAN: FORMULIR ----------------------
 halaman = st.session_state.halaman
-
 if halaman == "Formulir Survei":
     st.title("📝Formulir Survei Kepuasan Pasien")
 
@@ -374,7 +360,7 @@ if halaman == "Formulir Survei":
 
 # -------------------- HALAMAN: BERANDA -----------------------
 elif halaman == "Beranda":
-    st.image(asset_path("staf.jpg"), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
+    st.image("staf.jpg", use_container_width=True, caption="Dokter, Staff, dan Jajaran")
     st.markdown("---")
 
     # Video profil (opsional)
@@ -387,11 +373,10 @@ elif halaman == "Beranda":
         st.info("Video profil belum tersedia.")
 
     st.markdown("""
-Klinik Pratama Theresia berkomitmen memberikan pelayanan medis terbaik 
-dengan tenaga profesional dan fasilitas yang nyaman bagi seluruh masyarakat Kabupaten Nias Selatan.  
-
-Silakan klik **Formulir Survei** di samping untuk berpartisipasi memberikan penilaian Anda.
-""")
+    Klinik Pratama Theresia berkomitmen memberikan pelayanan medis terbaik 
+    dengan tenaga profesional dan fasilitas yang nyaman bagi seluruh masyarakat Kabupaten Nias Selatan.
+    Silakan klik **Formulir Survei** di samping untuk berpartisipasi memberikan penilaian Anda.
+    """)
 
 # -------------------- HALAMAN: TENTANG KLINIK ----------------
 elif halaman == "Tentang Klinik":
@@ -399,13 +384,13 @@ elif halaman == "Tentang Klinik":
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.image(asset_path("ftbersama.jpg"), width=300)
+        st.image("ftbersama.jpg", width=300)
     with col2:
-        st.image(asset_path("penerima.jpg"), width=310)
+        st.image("penerima.jpg", width=310)
     with col3:
-        st.image(asset_path("piagam.jpg"), width=280)
+        st.image("piagam.jpg", width=280)
     with col4:
-        st.image(asset_path("plakat.jpg"), width=300)
+        st.image("plakat.jpg", width=300)
 
     st.markdown("""
         <div style="text-align: center; margin-bottom: 80px;">
@@ -415,148 +400,13 @@ elif halaman == "Tentang Klinik":
     """, unsafe_allow_html=True)
 
     st.markdown("""
-Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan pelayanan medis berkualitas tinggi dengan pendekatan yang ramah dan profesional.
+    Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan pelayanan medis berkualitas tinggi dengan pendekatan yang ramah dan profesional.
+    *Visi:* Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
+    *Misi:* 
+    * Memberikan pelayanan medis yang cepat, tepat, dan terpercaya.
+    * Menjaga kenyamanan dan keamanan pasien.
+    * Meningkatkan kualitas hidup masyarakat melalui edukasi kesehatan.
 
-*Visi:* Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
-
-*Misi:*
-* Memberikan pelayanan medis yang cepat, tepat, dan terpercaya.
-* Menjaga kenyamanan dan keamanan pasien.
-* Meningkatkan kualitas hidup masyarakat melalui edukasi kesehatan.
-
----
-*Informasi Kontak:*  
-📍 *Lokasi:* Jl. Imam Bonjol No.10, Kel. Pasar Teluk Dalam, Kab. Nias Selatan, Prov. Sumatera Utara  
-📞 *Telepon:* 0852-1012-5773  
-📧 *Email:* info@kliniktheresia.id
-""")
-
-# -------------------- HALAMAN: ADMIN DASHBOARD ---------------
-elif halaman == "Admin Dashboard":
-    st.title("📊 Admin Dashboard - Hasil Survei")
-
-    password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
-    ADMIN_PASSWORD = "kliniktheresia"
-
-    if password == ADMIN_PASSWORD:
-        st.sidebar.success("Login Berhasil")
-
-        df_responden, df_jawaban, df_saran = load_data_from_db()
-
-        if df_responden.empty:
-            st.info("Belum ada data survei yang masuk.")
-        else:
-            # 1) Data Responden
-            st.subheader("1. Data Responden")
-            st.info(f"Total Responden: {len(df_responden)}")
-            st.dataframe(df_responden, use_container_width=True)
-
-            # 2) Detail Jawaban
-            st.subheader("2. Detail Semua Jawaban")
-            st.dataframe(df_jawaban, use_container_width=True)
-
-            # 3) Saran
-            st.subheader("3. Saran dan Masukan")
-            st.dataframe(df_saran, use_container_width=True)
-
-            # 4) Data Gabungan
-            st.subheader("4. Data Gabungan (Responden + Saran)")
-            if not df_saran.empty:
-                df_gabung = pd.merge(
-                    df_responden,
-                    df_saran.drop(columns=["id"], errors="ignore"),
-                    left_on="id",
-                    right_on="responden_id",
-                    how="left",
-                )
-            else:
-                df_gabung = df_responden.copy()
-                df_gabung["responden_id"] = np.nan
-                df_gabung["saran"] = np.nan
-            st.dataframe(df_gabung, use_container_width=True)
-
-            # 5) K-Means Clustering
-            st.subheader("5. Analisis Kluster Sentimen (K-Means)")
-            df_cluster_data = prepare_cluster_data(df_jawaban)
-
-            if df_cluster_data.shape[0] < 3:
-                st.info("Tidak cukup data responden (minimum 3) untuk melakukan clustering.")
-                df_cluster_data = pd.DataFrame()
-            else:
-                try:
-                    X = df_cluster_data[["skor_layanan", "skor_keseluruhan"]]
-                    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10).fit(X)
-                    df_cluster_data["cluster"] = kmeans.labels_
-
-                    centers = kmeans.cluster_centers_
-                    center_means = centers.mean(axis=1)
-                    order = np.argsort(center_means)
-                    mapping = {
-                        order[0]: "Negatif/Kurang Puas",
-                        order[1]: "Netral",
-                        order[2]: "Positif/Puas",
-                    }
-                    df_cluster_data["sentimen"] = df_cluster_data["cluster"].map(mapping).astype("category")
-
-                    st.markdown("#### Visualisasi Kluster Sentimen")
-                    fig = px.scatter(
-                        df_cluster_data,
-                        x="skor_layanan",
-                        y="skor_keseluruhan",
-                        color="sentimen",
-                        title="Kluster Sentimen Responden",
-                        labels={"skor_layanan": "Rata-rata Skor Layanan (Umum/BPJS)", "skor_keseluruhan": "Rata-rata Skor Keseluruhan"},
-                        hover_data=["responden_id"],
-                    )
-
-                    # Tambahkan pusat cluster
-                    centers_df = pd.DataFrame(centers, columns=["skor_layanan", "skor_keseluruhan"])
-                    centers_df["sentimen"] = [mapping[i] for i in range(3)]
-                    fig.add_scatter(
-                        x=centers_df["skor_layanan"],
-                        y=centers_df["skor_keseluruhan"],
-                        mode="markers",
-                        marker=dict(color="black", size=15, symbol="cross"),
-                        name="Pusat Kluster",
-                    )
-
-                    st.plotly_chart(fig, use_container_width=True)
-                    st.markdown("#### Detail Data Kluster")
-                    st.dataframe(df_cluster_data, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Terjadi error saat visualisasi K-Means: {e}")
-                    df_cluster_data = pd.DataFrame()
-
-            # 6) Download Excel
-            st.subheader("6. Download Data Excel")
-            st.info("Klik tombol di bawah untuk mengunduh semua data dalam satu file Excel.")
-            excel_data_dict = {
-                "Responden": df_responden,
-                "Detail Jawaban": df_jawaban,
-                "Saran Masukan": df_saran,
-                "Data Gabungan": df_gabung,
-                "Analisis Kluster": df_cluster_data,
-            }
-            try:
-                excel_bytes = generate_excel(excel_data_dict)
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-                file_name = f"hasil_survei_klinik_{timestamp}.xlsx"
-                st.download_button(
-                    label="📥 Download Data (Excel)",
-                    data=excel_bytes,
-                    file_name=file_name,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-            except Exception as e:
-                st.error(f"Gagal membuat file Excel: {e}")
-
-    elif password:  # password diisi tapi salah
-        st.sidebar.error("Password salah. Coba lagi.")
-        st.warning("Silakan masukkan password yang benar untuk melihat data.")
-    else:
-        st.sidebar.warning("Silakan masukkan password admin di sidebar untuk melihat dashboard.")
-        st.info("Halaman ini dilindungi password.")
-
-# -------------------- FOOTER ---------------------------------
-st.markdown("---")
-st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+    ---
+    *Informasi Kontak:*   
+   

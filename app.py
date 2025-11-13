@@ -1,26 +1,25 @@
-# app.py — Survei Klinik Theresia (fix mobile, assets lokal, session_state, DB)
+# app.py — Perbaikan dan Penambahan Dashboard Admin
 
 import io
 import datetime
 import sqlite3
 from pathlib import Path
-
-import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.cluster import KMeans
 import plotly.express as px
+from sklearn.cluster import KMeans
+import streamlit as st
 
-# -------------------- KONFIG --------------------
+# -------------------- KONFIGURASI HALAMAN --------------------
 st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "survei_klinik.db"
 
-# ****************** PENTING: Inisialisasi session_state ******************
-st.session_state.setdefault("halaman", "Formulir Survei")   # default aman
+# -------------------- INISIALISASI SESSION STATE --------------------
+st.session_state.setdefault("halaman", "Formulir Survei")  # default halaman
 
-# -------------------- DB SETUP -----------------
+# -------------------- DATABASE SETUP --------------------
 def setup_database():
     """Buat DB & tabel jika belum ada."""
     conn = sqlite3.connect(str(DB_PATH))
@@ -62,39 +61,7 @@ def setup_database():
 
 setup_database()
 
-# -------------------- STYLE --------------------
-st.markdown("""
-<style>
-/* Sidebar */
-[data-testid="stSidebar"]{background:#e3f2fd;}
-[data-testid="stSidebar"] img{display:block;margin:10px auto;width:90%;border-radius:8px;}
-div[data-testid="stSidebar"] button{
-  background:#bbdefb!important;color:#0d47a1!important;font-weight:600!important;
-  border-radius:12px!important;margin-bottom:10px!important;transition:.2s;
-}
-div[data-testid="stSidebar"] button:hover{background:#64b5f6!important;color:#fff!important;transform:scale(1.02);}
-
-/* Main */
-[data-testid="stAppViewContainer"]{background:#f7fbff;color:#333;padding:16px;}
-h1,h2,h3,p, label{color:#333;}
-hr{border:1px solid #bbdefb!important;margin:16px 0;}
-
-/* Form inputs */
-.stTextInput input, .stSelectbox, .stTextArea textarea{
-  font-size:16px;border-radius:10px;border:1px solid #cbd5e1;
-}
-
-/* Mobile tweaks */
-@media (max-width: 768px){
-  [data-testid="stAppViewContainer"]{padding:10px;}
-  h1{font-size:24px} h2{font-size:20px} h3{font-size:18px}
-  .stTextInput input, .stSelectbox, .stTextArea textarea{font-size:14px;}
-  .stImage img{width:100%;height:auto;}
-}
-</style>
-""", unsafe_allow_html=True)
-
-# -------------------- HELPERS ------------------
+# -------------------- HELPERS --------------------
 def skala_emosi(pertanyaan, key):
     return st.radio(
         pertanyaan,
@@ -191,7 +158,7 @@ def prepare_cluster_data(df_jawaban):
         st.error(f"Error siapkan data cluster: {e}")
         return pd.DataFrame(columns=["responden_id","skor_layanan","skor_keseluruhan"])
 
-# -------------------- NAV (SIDEBAR) -------------
+# -------------------- SIDEBAR NAV --------------------
 menu_pages = ["Formulir Survei", "Beranda", "Tentang Klinik", "Admin Dashboard"]
 with st.sidebar:
     st.image("logo.jpeg", width=250)
@@ -205,8 +172,8 @@ with st.sidebar:
 st.image("logo.jpeg", width=100)
 st.markdown("---")
 
-# -------------------- ROUTING -------------------
-halaman = st.session_state.get("halaman", "Formulir Survei")   # aman walau state kosong
+# -------------------- HALAMAN FORMULIR --------------------
+halaman = st.session_state.get("halaman", "Formulir Survei")  # memastikan tidak kosong
 
 if halaman == "Formulir Survei":
     st.title("📝 Formulir Survei Kepuasan Pasien")
@@ -289,55 +256,8 @@ if halaman == "Formulir Survei":
                 st.session_state.halaman = "Beranda"
                 st.rerun()
 
-elif halaman == "Beranda":
-    st.image("staf.jpg", use_container_width=True, caption="Dokter, Staff, dan Jajaran")
-    st.markdown("---")
-
-    # Video profil (opsional)
-    vid_path = BASE_DIR / "video.mp4"
-    if vid_path.exists():
-        st.video(str(vid_path), start_time=0)
-    else:
-        st.info("Video profil belum tersedia.")
-
-    st.markdown("""
-Klinik Pratama Theresia berkomitmen memberikan pelayanan medis terbaik
-dengan tenaga profesional dan fasilitas yang nyaman bagi masyarakat Kabupaten Nias Selatan.
-Silakan klik **Formulir Survei** di samping untuk memberikan penilaian Anda.
-""")
-
-elif halaman == "Tentang Klinik":
-    st.title("📖 Tentang Klinik Pratama Theresia")
-
-    c1,c2,c3,c4 = st.columns(4)
-    with c1: st.image("ftbersama.jpg",  use_container_width=True)
-    with c2: st.image("penerima.jpg",    use_container_width=True)
-    with c3: st.image("piagam.jpg",      use_container_width=True)
-    with c4: st.image("plakat.jpg",      use_container_width=True)
-
-    st.markdown("""
-<div style="text-align:center;margin:20px 0 40px;">
-Penerimaan Penghargaan sebagai Klinik Terbaik dan Klinik Berkomitmen Tahun 2024
-yang diserahkan oleh Kepala BPJS Cabang Gunung Sitoli
-</div>
-""", unsafe_allow_html=True)
-
-    st.markdown("""
-**Visi**: Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
-
-**Misi**:
-- Memberikan pelayanan medis yang cepat, tepat, dan terpercaya.  
-- Menjaga kenyamanan dan keamanan pasien.  
-- Meningkatkan kualitas hidup masyarakat melalui edukasi kesehatan.  
-
-**Kontak**  
-📍 Jl. Imam Bonjol No.10, Kel. Pasar Teluk Dalam, Kab. Nias Selatan, Sumatera Utara  
-📞 0852-1012-5773  
-📧 info@kliniktheresia.id
-""")
-
+# -------------------- HALAMAN ADMIN DASHBOARD --------------------
 elif halaman == "Admin Dashboard":
-    st.title("📊 Admin Dashboard - Hasil Survei")
     password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
     ADMIN_PASSWORD = "kliniktheresia"
 
@@ -348,16 +268,20 @@ elif halaman == "Admin Dashboard":
         if df_responden.empty:
             st.info("Belum ada data survei yang masuk.")
         else:
+            # 1. Data Responden
             st.subheader("1. Data Responden")
             st.info(f"Total Responden: {len(df_responden)}")
             st.dataframe(df_responden, use_container_width=True)
 
+            # 2. Detail Jawaban
             st.subheader("2. Detail Semua Jawaban")
             st.dataframe(df_jawaban, use_container_width=True)
 
+            # 3. Saran dan Masukan
             st.subheader("3. Saran dan Masukan")
             st.dataframe(df_saran, use_container_width=True)
 
+            # 4. Data Gabungan
             st.subheader("4. Data Gabungan (Responden + Saran)")
             if not df_saran.empty:
                 df_gabung = pd.merge(
@@ -371,16 +295,17 @@ elif halaman == "Admin Dashboard":
                 df_gabung["saran"] = np.nan
             st.dataframe(df_gabung, use_container_width=True)
 
+            # 5. K-Means Clustering
             st.subheader("5. Analisis Kluster Sentimen (K-Means)")
             df_cluster_data = prepare_cluster_data(df_jawaban)
             if df_cluster_data.shape[0] < 3:
                 st.info("Tidak cukup data responden (minimum 3) untuk clustering.")
-                df_cluster_data = pd.DataFrame()
             else:
                 try:
                     X = df_cluster_data[["skor_layanan","skor_keseluruhan"]]
                     kmeans = KMeans(n_clusters=3, random_state=42, n_init=10).fit(X)
                     df_cluster_data["cluster"] = kmeans.labels_
+
                     centers = kmeans.cluster_centers_
                     order = np.argsort(centers.mean(axis=1))
                     mapping = {order[0]:"Negatif/Kurang Puas", order[1]:"Netral", order[2]:"Positif/Puas"}
@@ -405,9 +330,9 @@ elif halaman == "Admin Dashboard":
                     st.markdown("#### Detail Data Kluster")
                     st.dataframe(df_cluster_data, use_container_width=True)
                 except Exception as e:
-                    st.error(f"Error visualisasi K-Means: {e}")
-                    df_cluster_data = pd.DataFrame()
+                    st.error(f"Terjadi error saat visualisasi K-Means: {e}")
 
+            # 6. Download Data
             st.subheader("6. Download Data Excel")
             excel_data = {
                 "Responden": df_responden,
@@ -418,23 +343,25 @@ elif halaman == "Admin Dashboard":
             }
             try:
                 excel_bytes = generate_excel(excel_data)
-                ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
                 st.download_button(
                     "📥 Download Data (Excel)",
                     data=excel_bytes,
-                    file_name=f"hasil_survei_klinik_{ts}.xlsx",
+                    file_name=f"hasil_survei_klinik_{timestamp}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
             except Exception as e:
                 st.error(f"Gagal membuat file Excel: {e}")
 
-    elif password:   # diisi tapi salah
+    elif password:   # jika password salah
         st.sidebar.error("Password salah. Coba lagi.")
         st.warning("Silakan masukkan password yang benar untuk melihat data.")
     else:
         st.sidebar.warning("Masukkan password admin di sidebar untuk melihat dashboard.")
         st.info("Halaman ini dilindungi password.")
 
+
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+

@@ -1,25 +1,28 @@
-import os
+# app.py — Survei Klinik Theresia (fix mobile, assets lokal, session_state, DB)
+
 import io
-import base64
 import datetime
 import sqlite3
 from pathlib import Path
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 import plotly.express as px
 
-# -------------------- KONFIGURASI HALAMAN --------------------
+# -------------------- KONFIG --------------------
 st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 
-# -------------------- PATH ABSOLUT PROYEK --------------------
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "survei_klinik.db"
 
-# -------------------- DATABASE SETUP -------------------------
+# ****************** PENTING: Inisialisasi session_state ******************
+st.session_state.setdefault("halaman", "Formulir Survei")   # default aman
+
+# -------------------- DB SETUP -----------------
 def setup_database():
-    """Membuat DB dan tabel bila belum ada (pakai path absolut)."""
+    """Buat DB & tabel jika belum ada."""
     conn = sqlite3.connect(str(DB_PATH))
     c = conn.cursor()
 
@@ -59,140 +62,39 @@ def setup_database():
 
 setup_database()
 
-# -------------------- STYLES (CSS) ---------------------------
+# -------------------- STYLE --------------------
 st.markdown("""
 <style>
-/* General Styles */
-body {
-    font-family: 'Arial', sans-serif;
-    color: #333;  /* Dark text for contrast */
-}
-
 /* Sidebar */
-[data-testid="stSidebar"] {
-    background-color: #e3f2fd;
+[data-testid="stSidebar"]{background:#e3f2fd;}
+[data-testid="stSidebar"] img{display:block;margin:10px auto;width:90%;border-radius:8px;}
+div[data-testid="stSidebar"] button{
+  background:#bbdefb!important;color:#0d47a1!important;font-weight:600!important;
+  border-radius:12px!important;margin-bottom:10px!important;transition:.2s;
 }
-[data-testid="stSidebar"] img {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 10px;
-    width: 90%;
-    border-radius: 8px;
-}
-[data-testid="stSidebar"] h3 {
-    color: #0d47a1;
-    text-align: center;
-    font-size: 18px;
-}
+div[data-testid="stSidebar"] button:hover{background:#64b5f6!important;color:#fff!important;transform:scale(1.02);}
 
-/* Button in Sidebar */
-div[data-testid="stSidebar"] button {
-    background-color: #bbdefb !important;
-    color: #0d47a1 !important;
-    font-weight: 600 !important;
-    border-radius: 8px !important;
-    margin-bottom: 10px !important;
-    transition: 0.3s;
-}
-div[data-testid="stSidebar"] button:hover {
-    background-color: #64b5f6 !important;
-    color: white !important;
-    transform: scale(1.02);
+/* Main */
+[data-testid="stAppViewContainer"]{background:#f7fbff;color:#333;padding:16px;}
+h1,h2,h3,p, label{color:#333;}
+hr{border:1px solid #bbdefb!important;margin:16px 0;}
+
+/* Form inputs */
+.stTextInput input, .stSelectbox, .stTextArea textarea{
+  font-size:16px;border-radius:10px;border:1px solid #cbd5e1;
 }
 
-/* Main Content */
-[data-testid="stAppViewContainer"] {
-    background-color: #f7fbff;
-    color: #333;  /* Ensures good text contrast */
-    padding: 20px;
-}
-
-h1, h2, h3, p {
-    color: #333;  /* Ensures all text is readable */
-    font-family: 'Arial', sans-serif;
-}
-
-/* Form and Inputs */
-.stTextInput input, .stSelectbox select, .stRadio input, .stTextArea textarea {
-    font-size: 16px; /* Ensure text is big enough to read */
-    padding: 10px;
-    margin-bottom: 20px;
-    width: 100%;
-    border-radius: 8px;
-    border: 1px solid #bbb;
-}
-
-.stButton {
-    font-size: 16px;  /* Adjust font size for mobile */
-    padding: 10px 20px;
-    background-color: #64b5f6;
-    color: white;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-}
-.stButton:hover {
-    background-color: #42a5f5;
-}
-
-/* Headings */
-h1 {
-    font-size: 32px;
-    margin-bottom: 20px;
-}
-
-h2 {
-    font-size: 28px;
-    margin-bottom: 15px;
-}
-
-h3 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-hr {
-    border: 1px solid #bbdefb !important;
-    margin: 20px 0;
-}
-
-/* Media Queries for Responsiveness */
-@media (max-width: 768px) {
-    /* Adjust main content layout */
-    [data-testid="stAppViewContainer"] {
-        padding: 10px;
-    }
-
-    /* Sidebar logo size */
-    [data-testid="stSidebar"] img {
-        width: 80%;  /* Adjust logo for smaller screens */
-    }
-
-    /* Text input sizes */
-    .stTextInput input, .stSelectbox select, .stRadio input, .stTextArea textarea {
-        font-size: 14px;  /* Smaller font size for inputs on mobile */
-    }
-
-    /* Form labels */
-    h1, h2, h3, p {
-        font-size: 18px;  /* Adjust text size for smaller screens */
-    }
-
-    .stButton {
-        font-size: 14px;  /* Button font size for mobile */
-    }
-
-    /* Responsive layout for images */
-    .stImage img {
-        width: 100%;  /* Ensure images are responsive */
-        height: auto;
-    }
+/* Mobile tweaks */
+@media (max-width: 768px){
+  [data-testid="stAppViewContainer"]{padding:10px;}
+  h1{font-size:24px} h2{font-size:20px} h3{font-size:18px}
+  .stTextInput input, .stSelectbox, .stTextArea textarea{font-size:14px;}
+  .stImage img{width:100%;height:auto;}
 }
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------- HELPER PERTANYAAN ----------------------
+# -------------------- HELPERS ------------------
 def skala_emosi(pertanyaan, key):
     return st.radio(
         pertanyaan,
@@ -208,7 +110,6 @@ def skala_emosi(pertanyaan, key):
     )
 
 def extract_data_from_radio(radio_val):
-    """return (teks, skor) dari string radio '1 😠 Sangat Tidak Puas'"""
     if radio_val is None:
         return None, 0
     parts = radio_val.split()
@@ -216,48 +117,41 @@ def extract_data_from_radio(radio_val):
     teks = " ".join(parts[1:])
     return teks, skor
 
-def simpan_ke_db(nama, jenis_kelamin, usia, layanan, semua_jawaban_dict, saran):
-    """Simpan semua data form ke DB."""
+def simpan_ke_db(nama, jk, usia, layanan, semua_jawaban, saran):
     try:
         conn = sqlite3.connect(str(DB_PATH))
         c = conn.cursor()
 
-        # 1) responden
         c.execute(
             "INSERT INTO responden (nama, jenis_kelamin, usia, layanan) VALUES (?, ?, ?, ?)",
-            (nama, jenis_kelamin, usia, layanan),
+            (nama, jk, usia, layanan),
         )
-        new_responden_id = c.lastrowid
+        rid = c.lastrowid
 
-        # 2) semua jawaban
-        for key, radio_val in semua_jawaban_dict.items():
-            if radio_val:
-                teks, skor = extract_data_from_radio(radio_val)
+        for k, v in semua_jawaban.items():
+            if v:
+                teks, skor = extract_data_from_radio(v)
                 c.execute(
                     "INSERT INTO jawaban (responden_id, pertanyaan_key, jawaban_teks, jawaban_skor) VALUES (?, ?, ?, ?)",
-                    (new_responden_id, key, teks, skor),
+                    (rid, k, teks, skor),
                 )
 
-        # 3) saran
         if saran:
             c.execute(
                 "INSERT INTO saran_masukan (responden_id, saran) VALUES (?, ?)",
-                (new_responden_id, saran),
+                (rid, saran),
             )
 
         conn.commit()
         return True
     except sqlite3.Error as e:
-        st.error(f"Terjadi error saat menyimpan ke database: {e}")
+        st.error(f"DB error: {e}")
         return False
     finally:
-        try:
-            conn.close()
-        except:
-            pass
+        try: conn.close()
+        except: pass
 
 def generate_excel(dataframes_dict):
-    """Buat file Excel di memori dari dict DataFrame."""
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         for sheet_name, df in dataframes_dict.items():
@@ -266,16 +160,11 @@ def generate_excel(dataframes_dict):
     return output.getvalue()
 
 def load_data_from_db():
-    """Load semua data dari DB -> DataFrame."""
     conn = sqlite3.connect(str(DB_PATH))
     try:
         df_responden = pd.read_sql_query("SELECT * FROM responden ORDER BY id DESC", conn)
-        df_jawaban = pd.read_sql_query(
-            "SELECT * FROM jawaban ORDER BY responden_id DESC, id ASC", conn
-        )
-        df_saran = pd.read_sql_query(
-            "SELECT * FROM saran_masukan ORDER BY responden_id DESC", conn
-        )
+        df_jawaban   = pd.read_sql_query("SELECT * FROM jawaban ORDER BY responden_id DESC, id ASC", conn)
+        df_saran     = pd.read_sql_query("SELECT * FROM saran_masukan ORDER BY responden_id DESC", conn)
         return df_responden, df_jawaban, df_saran
     except Exception as e:
         st.error(f"Gagal memuat data: {e}")
@@ -284,78 +173,58 @@ def load_data_from_db():
         conn.close()
 
 def prepare_cluster_data(df_jawaban):
-    """Ubah jawaban (long) jadi per responden (wide) untuk clustering."""
     if df_jawaban.empty:
-        return pd.DataFrame(columns=["responden_id", "skor_layanan", "skor_keseluruhan"])
-
+        return pd.DataFrame(columns=["responden_id","skor_layanan","skor_keseluruhan"])
     try:
         df_layanan = df_jawaban[df_jawaban["pertanyaan_key"].str.contains("^[ub]", regex=True)]
-        if not df_layanan.empty:
-            df_layanan_skor = (
-                df_layanan.groupby("responden_id")["jawaban_skor"]
-                .mean()
-                .reset_index()
-                .rename(columns={"jawaban_skor": "skor_layanan"})
-            )
-        else:
-            df_layanan_skor = pd.DataFrame(columns=["responden_id", "skor_layanan"])
-
         df_keseluruhan = df_jawaban[df_jawaban["pertanyaan_key"].str.contains("^k", regex=True)]
-        if not df_keseluruhan.empty:
-            df_keseluruhan_skor = (
-                df_keseluruhan.groupby("responden_id")["jawaban_skor"]
-                .mean()
-                .reset_index()
-                .rename(columns={"jawaban_skor": "skor_keseluruhan"})
-            )
-        else:
-            df_keseluruhan_skor = pd.DataFrame(columns=["responden_id", "skor_keseluruhan"])
 
-        if df_layanan_skor.empty or df_keseluruhan_skor.empty:
-            return pd.DataFrame(columns=["responden_id", "skor_layanan", "skor_keseluruhan"])
+        if df_layanan.empty or df_keseluruhan.empty:
+            return pd.DataFrame(columns=["responden_id","skor_layanan","skor_keseluruhan"])
 
-        df_cluster_data = pd.merge(df_layanan_skor, df_keseluruhan_skor, on="responden_id", how="inner")
-        return df_cluster_data.dropna()
+        df_layanan_skor = (df_layanan.groupby("responden_id")["jawaban_skor"]
+                           .mean().reset_index().rename(columns={"jawaban_skor":"skor_layanan"}))
+        df_keseluruhan_skor = (df_keseluruhan.groupby("responden_id")["jawaban_skor"]
+                               .mean().reset_index().rename(columns={"jawaban_skor":"skor_keseluruhan"}))
+        return pd.merge(df_layanan_skor, df_keseluruhan_skor, on="responden_id", how="inner").dropna()
     except Exception as e:
-        st.error(f"Error saat menyiapkan data cluster: {e}")
-        return pd.DataFrame(columns=["responden_id", "skor_layanan", "skor_keseluruhan"])
+        st.error(f"Error siapkan data cluster: {e}")
+        return pd.DataFrame(columns=["responden_id","skor_layanan","skor_keseluruhan"])
 
-# -------------------- NAVIGATION (SIDEBAR) -------------------
+# -------------------- NAV (SIDEBAR) -------------
 menu_pages = ["Formulir Survei", "Beranda", "Tentang Klinik", "Admin Dashboard"]
 with st.sidebar:
-    c1, c2, c3 = st.columns([0.5, 5, 0.5])
-    with c2:
-        st.image("logo.jpeg", width=250)  # direct image reference
-
+    st.image("logo.jpeg", width=250)
     st.markdown("<br>", unsafe_allow_html=True)
     for page in menu_pages:
-        if st.sidebar.button(page, key=f"nav_{page}", use_container_width=True):
+        if st.button(page, key=f"nav_{page}", use_container_width=True):
             st.session_state.halaman = page
+            st.rerun()
 
-# -------------------- HEADER GLOBAL --------------------------
-# logo header tiap halaman
-st.image("logo.jpeg", width=100)  # direct image reference
+# -------------------- HEADER --------------------
+st.image("logo.jpeg", width=100)
 st.markdown("---")
 
-# -------------------- HALAMAN: FORMULIR ----------------------
-halaman = st.session_state.halaman
+# -------------------- ROUTING -------------------
+halaman = st.session_state.get("halaman", "Formulir Survei")   # aman walau state kosong
+
 if halaman == "Formulir Survei":
-    st.title("📝Formulir Survei Kepuasan Pasien")
+    st.title("📝 Formulir Survei Kepuasan Pasien")
 
     with st.form("form_survei"):
         st.subheader("A. Data Diri Responden")
         nama = st.text_input("Nama Lengkap")
         usia = st.radio(
             "Usia",
-            ["Dibawah 20 tahun", "21–30 tahun", "31–40 tahun", "41–50 tahun", "Diatas 50 tahun"],
+            ["Dibawah 20 tahun","21–30 tahun","31–40 tahun","41–50 tahun","Diatas 50 tahun"],
         )
-        jenis_kelamin = st.selectbox("Jenis Kelamin", ["Laki-laki", "Perempuan"])
+        jenis_kelamin = st.selectbox("Jenis Kelamin", ["Laki-laki","Perempuan"])
 
         st.markdown("---")
 
         layanan = st.selectbox(
             "Silakan pilih jenis layanan yang Anda gunakan:",
-            ["Umum", "BPJS"],
+            ["Umum","BPJS"],
             key="pilihan_layanan",
         )
 
@@ -364,40 +233,34 @@ if halaman == "Formulir Survei":
         jawaban_dict = {}
         if layanan == "Umum":
             st.subheader("B1. Kepuasan Pelayanan – LAYANAN UMUM")
-            jawaban_dict["u1"] = skala_emosi("Dokter menjelaskan kondisi dan pengobatan dengan jelas.", "u1")
-            jawaban_dict["u2"] = skala_emosi("Dokter bersikap ramah dan profesional selama pemeriksaan.", "u2")
-            jawaban_dict["u3"] = skala_emosi("Waktu tunggu sebelum pemeriksaan sesuai harapan.", "u3")
-            jawaban_dict["u4"] = skala_emosi("Proses pendaftaran dan pembayaran berlangsung cepat dan mudah.", "u4")
-            jawaban_dict["u5"] = skala_emosi("Petugas administrasi memberikan pelayanan yang sopan dan informatif.", "u5")
-            jawaban_dict["u6"] = skala_emosi("Obat yang diberikan sesuai dengan keluhan dan ketersediaannya memadai.", "u6")
-            jawaban_dict["u7"] = skala_emosi("Ruang tunggu dan fasilitas klinik bersih serta nyaman.", "u7")
-            jawaban_dict["u8"] = skala_emosi("Biaya pelayanan sesuai dengan kualitas layanan yang diterima.", "u8")
-            jawaban_dict["u9"] = skala_emosi("Secara keseluruhan, saya puas terhadap pelayanan pasien umum.", "u9")
-            jawaban_dict["u10"] = skala_emosi("Saya bersedia datang kembali dan merekomendasikan klinik ini.", "u10")
+            jawaban_dict["u1"]  = skala_emosi("Dokter menjelaskan kondisi dan pengobatan dengan jelas.", "u1")
+            jawaban_dict["u2"]  = skala_emosi("Dokter bersikap ramah dan profesional selama pemeriksaan.", "u2")
+            jawaban_dict["u3"]  = skala_emosi("Waktu tunggu sebelum pemeriksaan sesuai harapan.", "u3")
+            jawaban_dict["u4"]  = skala_emosi("Proses pendaftaran dan pembayaran berlangsung cepat dan mudah.", "u4")
+            jawaban_dict["u5"]  = skala_emosi("Petugas administrasi sopan dan informatif.", "u5")
+            jawaban_dict["u6"]  = skala_emosi("Obat sesuai keluhan & ketersediaan memadai.", "u6")
+            jawaban_dict["u7"]  = skala_emosi("Ruang tunggu & fasilitas bersih/nyaman.", "u7")
+            jawaban_dict["u8"]  = skala_emosi("Biaya sesuai kualitas layanan.", "u8")
+            jawaban_dict["u9"]  = skala_emosi("Secara keseluruhan puas pada layanan umum.", "u9")
+            jawaban_dict["u10"] = skala_emosi("Bersedia datang kembali & merekomendasikan.", "u10")
         else:
             st.subheader("B2. Kepuasan Pelayanan – LAYANAN BPJS")
-            jawaban_dict["b1"] = skala_emosi("Proses pendaftaran pasien BPJS mudah dan cepat.", "b1")
-            jawaban_dict["b2"] = skala_emosi("Petugas BPJS memberikan informasi yang jelas dan membantu.", "b2")
-            jawaban_dict["b3"] = skala_emosi("Dokter memberikan pelayanan yang ramah dan menjelaskan pengobatan dengan baik.", "b3")
-            jawaban_dict["b4"] = skala_emosi("Waktu tunggu untuk pemeriksaan dokter sesuai harapan.", "b4")
-            jawaban_dict["b5"] = skala_emosi("Proses administrasi dan pengambilan obat berjalan lancar.", "b5")
-            jawaban_dict["b6"] = skala_emosi("Tidak ada perbedaan perlakuan antara pasien BPJS dan pasien umum.", "b6")
-            jawaban_dict["b7"] = skala_emosi("Prosedur rujukan dilakukan dengan cepat dan jelas.", "b7")
-            jawaban_dict["b8"] = skala_emosi("Fasilitas klinik bersih dan nyaman.", "b8")
-            jawaban_dict["b9"] = skala_emosi("Secara keseluruhan, saya puas terhadap pelayanan pasien BPJS.", "b9")
-            jawaban_dict["b10"] = skala_emosi("Saya bersedia datang kembali dan merekomendasikan klinik ini.", "b10")
+            jawaban_dict["b1"]  = skala_emosi("Pendaftaran BPJS mudah & cepat.", "b1")
+            jawaban_dict["b2"]  = skala_emosi("Petugas BPJS informatif & membantu.", "b2")
+            jawaban_dict["b3"]  = skala_emosi("Dokter ramah & menjelaskan pengobatan dengan baik.", "b3")
+            jawaban_dict["b4"]  = skala_emosi("Waktu tunggu dokter sesuai harapan.", "b4")
+            jawaban_dict["b5"]  = skala_emosi("Administrasi & pengambilan obat lancar.", "b5")
+            jawaban_dict["b6"]  = skala_emosi("Tidak ada perbedaan perlakuan dgn pasien umum.", "b6")
+            jawaban_dict["b7"]  = skala_emosi("Prosedur rujukan cepat & jelas.", "b7")
+            jawaban_dict["b8"]  = skala_emosi("Fasilitas klinik bersih & nyaman.", "b8")
+            jawaban_dict["b9"]  = skala_emosi("Secara keseluruhan puas pada layanan BPJS.", "b9")
+            jawaban_dict["b10"] = skala_emosi("Bersedia datang kembali & merekomendasikan.", "b10")
 
         st.markdown("---")
         st.subheader("C. Keseluruhan Pengalaman")
-        jawaban_dict["k1"] = skala_emosi(
-            "Saya merasa Klinik Pratama Theresia memberikan pelayanan kesehatan yang baik secara keseluruhan.", "k1"
-        )
-        jawaban_dict["k2"] = skala_emosi(
-            "Saya akan kembali menggunakan layanan di klinik ini di masa mendatang.", "k2"
-        )
-        jawaban_dict["k3"] = skala_emosi(
-            "Saya akan merekomendasikan Klinik Theresia kepada keluarga atau teman.", "k3"
-        )
+        jawaban_dict["k1"] = skala_emosi("Pelayanan keseluruhan klinik baik.", "k1")
+        jawaban_dict["k2"] = skala_emosi("Akan kembali menggunakan layanan klinik.", "k2")
+        jawaban_dict["k3"] = skala_emosi("Akan merekomendasikan ke keluarga/teman.", "k3")
 
         st.markdown("---")
         st.subheader("D. Saran dan Masukan")
@@ -406,90 +269,172 @@ if halaman == "Formulir Survei":
         submit = st.form_submit_button("Kirim Survei")
 
     if submit:
-        # cek semua pertanyaan layanan (u... / b...) terisi
+        # Pastikan bagian layanan terisi semua
         prefix = layanan[0].lower()  # 'u' atau 'b'
-        semua_terisi = all(
-            (val is not None)
-            for k, val in jawaban_dict.items()
-            if k.startswith(prefix)
-        )
+        semua_terisi = all((val is not None) for k, val in jawaban_dict.items() if k.startswith(prefix))
 
         if not nama or not semua_terisi:
             st.error("Mohon isi Nama Lengkap dan semua pertanyaan di bagian Kepuasan Pelayanan.")
         else:
             if simpan_ke_db(nama, jenis_kelamin, usia, layanan, jawaban_dict, saran):
                 nilai = [extract_data_from_radio(v)[1] for v in jawaban_dict.values() if v]
-                if not nilai:
-                    rata_rata = 0
-                    sentimen = "Belum Diisi"
-                else:
-                    rata_rata = sum(nilai) / len(nilai)
-                    if rata_rata >= 4.0:
-                        sentimen = "😄 Positif"
-                    elif rata_rata >= 2.5:
-                        sentimen = "😐 Netral"
-                    else:
-                        sentimen = "😠 Negatif"
+                rata_rata = (sum(nilai)/len(nilai)) if nilai else 0
+                if rata_rata >= 4.0:   sentimen = "😄 Positif"
+                elif rata_rata >= 2.5: sentimen = "😐 Netral"
+                else:                  sentimen = "😠 Negatif"
 
-                st.success(f"Terima kasih, {nama if nama else 'Bapak/Ibu'}, atas masukan Anda! Data telah tersimpan di database.")
+                st.success(f"Terima kasih, {nama}! Data tersimpan.")
                 st.subheader(f"Sentimen Anda: *{sentimen}* (Skor rata-rata: {rata_rata:.2f})")
 
-                # pindah ke Beranda
                 st.session_state.halaman = "Beranda"
                 st.rerun()
 
-
-# -------------------- HALAMAN: BERANDA -----------------------
 elif halaman == "Beranda":
     st.image("staf.jpg", use_container_width=True, caption="Dokter, Staff, dan Jajaran")
     st.markdown("---")
 
     # Video profil (opsional)
-    vid_path = ASSETS / "video.mp4"
+    vid_path = BASE_DIR / "video.mp4"
     if vid_path.exists():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.video(str(vid_path), start_time=0, format="video/mp4", width=350)
+        st.video(str(vid_path), start_time=0)
     else:
         st.info("Video profil belum tersedia.")
 
     st.markdown("""
-    Klinik Pratama Theresia berkomitmen memberikan pelayanan medis terbaik 
-    dengan tenaga profesional dan fasilitas yang nyaman bagi seluruh masyarakat Kabupaten Nias Selatan.
-    Silakan klik **Formulir Survei** di samping untuk berpartisipasi memberikan penilaian Anda.
-    """)
+Klinik Pratama Theresia berkomitmen memberikan pelayanan medis terbaik
+dengan tenaga profesional dan fasilitas yang nyaman bagi masyarakat Kabupaten Nias Selatan.
+Silakan klik **Formulir Survei** di samping untuk memberikan penilaian Anda.
+""")
 
-# -------------------- HALAMAN: TENTANG KLINIK ----------------
 elif halaman == "Tentang Klinik":
     st.title("📖 Tentang Klinik Pratama Theresia")
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.image("ftbersama.jpg", width=300)
-    with col2:
-        st.image("penerima.jpg", width=310)
-    with col3:
-        st.image("piagam.jpg", width=280)
-    with col4:
-        st.image("plakat.jpg", width=300)
+    c1,c2,c3,c4 = st.columns(4)
+    with c1: st.image("ftbersama.jpg",  use_container_width=True)
+    with c2: st.image("penerima.jpg",    use_container_width=True)
+    with c3: st.image("piagam.jpg",      use_container_width=True)
+    with c4: st.image("plakat.jpg",      use_container_width=True)
 
     st.markdown("""
-        <div style="text-align: center; margin-bottom: 80px;">
-            Penerimaan Penghargaan sebagai Klinik Terbaik dan Klinik Berkomitmen Tahun 2024
-            yang diserahkan oleh Kepala BPJS Cabang Gunung Sitoli
-        </div>
-    """, unsafe_allow_html=True)
+<div style="text-align:center;margin:20px 0 40px;">
+Penerimaan Penghargaan sebagai Klinik Terbaik dan Klinik Berkomitmen Tahun 2024
+yang diserahkan oleh Kepala BPJS Cabang Gunung Sitoli
+</div>
+""", unsafe_allow_html=True)
 
     st.markdown("""
-    Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan pelayanan medis berkualitas tinggi dengan pendekatan yang ramah dan profesional.
-    *Visi:* Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
-    *Misi:* 
-    * Memberikan pelayanan medis yang cepat, tepat, dan terpercaya.
-    * Menjaga kenyamanan dan keamanan pasien.
-    * Meningkatkan kualitas hidup masyarakat melalui edukasi kesehatan.
+**Visi**: Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
 
-    ---
-    *Informasi Kontak:*   
-       """)
+**Misi**:
+- Memberikan pelayanan medis yang cepat, tepat, dan terpercaya.  
+- Menjaga kenyamanan dan keamanan pasien.  
+- Meningkatkan kualitas hidup masyarakat melalui edukasi kesehatan.  
 
+**Kontak**  
+📍 Jl. Imam Bonjol No.10, Kel. Pasar Teluk Dalam, Kab. Nias Selatan, Sumatera Utara  
+📞 0852-1012-5773  
+📧 info@kliniktheresia.id
+""")
 
+elif halaman == "Admin Dashboard":
+    st.title("📊 Admin Dashboard - Hasil Survei")
+    password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
+    ADMIN_PASSWORD = "kliniktheresia"
+
+    if password == ADMIN_PASSWORD:
+        st.sidebar.success("Login Berhasil")
+        df_responden, df_jawaban, df_saran = load_data_from_db()
+
+        if df_responden.empty:
+            st.info("Belum ada data survei yang masuk.")
+        else:
+            st.subheader("1. Data Responden")
+            st.info(f"Total Responden: {len(df_responden)}")
+            st.dataframe(df_responden, use_container_width=True)
+
+            st.subheader("2. Detail Semua Jawaban")
+            st.dataframe(df_jawaban, use_container_width=True)
+
+            st.subheader("3. Saran dan Masukan")
+            st.dataframe(df_saran, use_container_width=True)
+
+            st.subheader("4. Data Gabungan (Responden + Saran)")
+            if not df_saran.empty:
+                df_gabung = pd.merge(
+                    df_responden,
+                    df_saran.drop(columns=["id"], errors="ignore"),
+                    left_on="id", right_on="responden_id", how="left",
+                )
+            else:
+                df_gabung = df_responden.copy()
+                df_gabung["responden_id"] = np.nan
+                df_gabung["saran"] = np.nan
+            st.dataframe(df_gabung, use_container_width=True)
+
+            st.subheader("5. Analisis Kluster Sentimen (K-Means)")
+            df_cluster_data = prepare_cluster_data(df_jawaban)
+            if df_cluster_data.shape[0] < 3:
+                st.info("Tidak cukup data responden (minimum 3) untuk clustering.")
+                df_cluster_data = pd.DataFrame()
+            else:
+                try:
+                    X = df_cluster_data[["skor_layanan","skor_keseluruhan"]]
+                    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10).fit(X)
+                    df_cluster_data["cluster"] = kmeans.labels_
+                    centers = kmeans.cluster_centers_
+                    order = np.argsort(centers.mean(axis=1))
+                    mapping = {order[0]:"Negatif/Kurang Puas", order[1]:"Netral", order[2]:"Positif/Puas"}
+                    df_cluster_data["sentimen"] = df_cluster_data["cluster"].map(mapping).astype("category")
+
+                    fig = px.scatter(
+                        df_cluster_data,
+                        x="skor_layanan", y="skor_keseluruhan",
+                        color="sentimen", title="Kluster Sentimen Responden",
+                        labels={"skor_layanan":"Rata-rata Skor Layanan (Umum/BPJS)",
+                                "skor_keseluruhan":"Rata-rata Skor Keseluruhan"},
+                        hover_data=["responden_id"],
+                    )
+                    centers_df = pd.DataFrame(centers, columns=["skor_layanan","skor_keseluruhan"])
+                    centers_df["sentimen"] = [mapping[i] for i in range(3)]
+                    fig.add_scatter(
+                        x=centers_df["skor_layanan"], y=centers_df["skor_keseluruhan"],
+                        mode="markers", marker=dict(color="black", size=15, symbol="cross"),
+                        name="Pusat Kluster",
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.markdown("#### Detail Data Kluster")
+                    st.dataframe(df_cluster_data, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error visualisasi K-Means: {e}")
+                    df_cluster_data = pd.DataFrame()
+
+            st.subheader("6. Download Data Excel")
+            excel_data = {
+                "Responden": df_responden,
+                "Detail Jawaban": df_jawaban,
+                "Saran Masukan": df_saran,
+                "Data Gabungan": df_gabung,
+                "Analisis Kluster": df_cluster_data,
+            }
+            try:
+                excel_bytes = generate_excel(excel_data)
+                ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+                st.download_button(
+                    "📥 Download Data (Excel)",
+                    data=excel_bytes,
+                    file_name=f"hasil_survei_klinik_{ts}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            except Exception as e:
+                st.error(f"Gagal membuat file Excel: {e}")
+
+    elif password:   # diisi tapi salah
+        st.sidebar.error("Password salah. Coba lagi.")
+        st.warning("Silakan masukkan password yang benar untuk melihat data.")
+    else:
+        st.sidebar.warning("Masukkan password admin di sidebar untuk melihat dashboard.")
+        st.info("Halaman ini dilindungi password.")
+
+# -------------------- FOOTER -------------------
+st.markdown("---")
+st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")

@@ -409,4 +409,5 @@ elif halaman == "Tentang Klinik":
 
     ---
     *Informasi Kontak:*   
-   
+       """)
+

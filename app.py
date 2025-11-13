@@ -1,6 +1,3 @@
-# app.py # ------------------------------------------------------------ 
-# Survei Klinik Theresia - Streamlit App (revisi path aset & DB) 
-# ------------------------------------------------------------ 
 import os
 import io
 import base64
@@ -18,15 +15,7 @@ st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 
 # -------------------- PATH ABSOLUT PROYEK --------------------
 BASE_DIR = Path(__file__).resolve().parent
-ASSETS = BASE_DIR / "assets"  # You may not need this if assets are in the same directory
 DB_PATH = BASE_DIR / "survei_klinik.db"
-
-# -------------------- REMOVE asset_path FUNCTION --------------------
-# Remove the asset_path function since you're directly using images from the same directory.
-
-# -------------------- SETUP SESSION STATE --------------------
-if "halaman" not in st.session_state:
-    st.session_state.halaman = "Formulir Survei"  # default
 
 # -------------------- DATABASE SETUP -------------------------
 def setup_database():
@@ -73,6 +62,12 @@ setup_database()
 # -------------------- STYLES (CSS) ---------------------------
 st.markdown("""
 <style>
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    color: #333;  /* Dark text for contrast */
+}
+
 /* Sidebar */
 [data-testid="stSidebar"] {
     background-color: #e3f2fd;
@@ -88,7 +83,10 @@ st.markdown("""
 [data-testid="stSidebar"] h3 {
     color: #0d47a1;
     text-align: center;
+    font-size: 18px;
 }
+
+/* Button in Sidebar */
 div[data-testid="stSidebar"] button {
     background-color: #bbdefb !important;
     color: #0d47a1 !important;
@@ -102,12 +100,94 @@ div[data-testid="stSidebar"] button:hover {
     color: white !important;
     transform: scale(1.02);
 }
-/* Halaman utama */
+
+/* Main Content */
 [data-testid="stAppViewContainer"] {
     background-color: #f7fbff;
+    color: #333;  /* Ensures good text contrast */
+    padding: 20px;
 }
+
+h1, h2, h3, p {
+    color: #333;  /* Ensures all text is readable */
+    font-family: 'Arial', sans-serif;
+}
+
+/* Form and Inputs */
+.stTextInput input, .stSelectbox select, .stRadio input, .stTextArea textarea {
+    font-size: 16px; /* Ensure text is big enough to read */
+    padding: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #bbb;
+}
+
+.stButton {
+    font-size: 16px;  /* Adjust font size for mobile */
+    padding: 10px 20px;
+    background-color: #64b5f6;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+.stButton:hover {
+    background-color: #42a5f5;
+}
+
+/* Headings */
+h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
 hr {
     border: 1px solid #bbdefb !important;
+    margin: 20px 0;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    /* Adjust main content layout */
+    [data-testid="stAppViewContainer"] {
+        padding: 10px;
+    }
+
+    /* Sidebar logo size */
+    [data-testid="stSidebar"] img {
+        width: 80%;  /* Adjust logo for smaller screens */
+    }
+
+    /* Text input sizes */
+    .stTextInput input, .stSelectbox select, .stRadio input, .stTextArea textarea {
+        font-size: 14px;  /* Smaller font size for inputs on mobile */
+    }
+
+    /* Form labels */
+    h1, h2, h3, p {
+        font-size: 18px;  /* Adjust text size for smaller screens */
+    }
+
+    .stButton {
+        font-size: 14px;  /* Button font size for mobile */
+    }
+
+    /* Responsive layout for images */
+    .stImage img {
+        width: 100%;  /* Ensure images are responsive */
+        height: auto;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -358,6 +438,7 @@ if halaman == "Formulir Survei":
                 st.session_state.halaman = "Beranda"
                 st.rerun()
 
+
 # -------------------- HALAMAN: BERANDA -----------------------
 elif halaman == "Beranda":
     st.image("staf.jpg", use_container_width=True, caption="Dokter, Staff, dan Jajaran")
@@ -410,4 +491,5 @@ elif halaman == "Tentang Klinik":
     ---
     *Informasi Kontak:*   
        """)
+
 

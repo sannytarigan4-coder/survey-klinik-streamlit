@@ -294,8 +294,38 @@ elif halaman == "Beranda":
         st.info("Video profil belum tersedia.")
 
 # -------------------- HALAMAN: TENTANG KLINIK --------------------
+# Perlu didefinisikan bersama dengan LOGO_PATH, STAF_PATH, VIDEO_PATH
+FTBERSAMA_PATH = BASE_DIR / "ftbersama.jpg"
+PENERIMA_PATH = BASE_DIR / "penerima.jpg"
+PIAGAM_PATH = BASE_DIR / "piagam.jpg"
+PLAKAT_PATH = BASE_DIR / "plakat.jpg"
+
+
+# ... (lanjutan dari kode sebelumnya, pastikan kode di atas ditambahkan di bagian definisi path)
+
+
+# -------------------- HALAMAN: TENTANG KLINIK --------------------
 elif halaman == "Tentang Klinik":
     st.title("🏥 Tentang Klinik Pratama Theresia")
+
+    # BARIS BARU: Menampilkan 4 Gambar
+    st.subheader("Galeri Dokumentasi")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        # Menggunakan Path baru dan menyesuaikan ukuran width
+        if FTBERSAMA_PATH.exists():
+            st.image(str(FTBERSAMA_PATH), width=300, caption="Foto Bersama Staf")
+    with col2:
+        if PENERIMA_PATH.exists():
+            st.image(str(PENERIMA_PATH), width=300, caption="Prosesi Penerimaan")
+    with col3:
+        if PIAGAM_PATH.exists():
+            st.image(str(PIAGAM_PATH), width=300, caption="Piagam Penghargaan")
+    with col4:
+        if PLAKAT_PATH.exists():
+            st.image(str(PLAKAT_PATH), width=300, caption="Plakat Penghargaan")
+            
+    st.markdown("---") # Garis pemisah visual
     st.write(
         """
         Klinik Pratama Theresia berkomitmen untuk memberikan pelayanan kesehatan 
@@ -452,3 +482,4 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+

@@ -258,11 +258,11 @@ if halaman == "Formulir Survei":
 
 # -------------------- HALAMAN: BERANDA -----------------------
 elif halaman == "Beranda":
-    st.image(asset_path("staf.jpg"), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
+    st.image(("staf.jpg"), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
     st.markdown("---")
 
     # Video profil (opsional)
-    vid_path = ASSETS / "video.mp4"
+    vid_path = "video.mp4"
     if vid_path.exists():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
@@ -377,5 +377,6 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+
 
 

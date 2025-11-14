@@ -16,6 +16,10 @@ st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "survei_klinik.db"
 
+# PENAMBAHAN: DEFINISI PATH FILE MEDIA
+LOGO_PATH = BASE_DIR / "logo.jpeg"
+STAF_PATH = BASE_DIR / "staf.jpg"
+VIDEO_PATH = BASE_DIR / "video.mp4"
 # -------------------- INISIALISASI SESSION STATE --------------------
 st.session_state.setdefault("halaman", "Formulir Survei")  # default halaman
 
@@ -143,7 +147,9 @@ def prepare_cluster_data(df_jawaban):
     if df_jawaban.empty:
         return pd.DataFrame(columns=["responden_id","skor_layanan","skor_keseluruhan"])
     try:
+        # Mengambil semua skor pertanyaan yang dimulai dengan 'u' atau 'b' (Layanan Umum/BPJS)
         df_layanan = df_jawaban[df_jawaban["pertanyaan_key"].str.contains("^[ub]", regex=True)]
+        # Mengambil semua skor pertanyaan yang dimulai dengan 'k' (Keseluruhan Pengalaman)
         df_keseluruhan = df_jawaban[df_jawaban["pertanyaan_key"].str.contains("^k", regex=True)]
 
         if df_layanan.empty or df_keseluruhan.empty:
@@ -161,7 +167,13 @@ def prepare_cluster_data(df_jawaban):
 # -------------------- SIDEBAR NAV --------------------
 menu_pages = ["Formulir Survei", "Beranda", "Tentang Klinik", "Admin Dashboard"]
 with st.sidebar:
-    st.image("logo.jpeg", width=250)
+    # PERBAIKAN: Menggunakan LOGO_PATH
+    if LOGO_PATH.exists():
+        st.image(str(LOGO_PATH), width=250)
+    else:
+        st.subheader("Klinik Theresia")
+        st.caption("Logo tidak ditemukan")
+        
     st.markdown("<br>", unsafe_allow_html=True)
     for page in menu_pages:
         if st.button(page, key=f"nav_{page}", use_container_width=True):
@@ -169,7 +181,12 @@ with st.sidebar:
             st.rerun()
 
 # -------------------- HEADER --------------------
-st.image("logo.jpeg", width=100)
+# PERBAIKAN: Menggunakan LOGO_PATH
+if LOGO_PATH.exists():
+    st.image(str(LOGO_PATH), width=100)
+else:
+    st.header("Survei Klinik Theresia")
+
 st.markdown("---")
 
 # -------------------- HALAMAN FORMULIR --------------------
@@ -258,17 +275,46 @@ if halaman == "Formulir Survei":
 
 # -------------------- HALAMAN: BERANDA -----------------------
 elif halaman == "Beranda":
-    st.image(("staf.jpg"), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
+    # PERBAIKAN: Menggunakan STAF_PATH
+    if STAF_PATH.exists():
+        st.image(str(STAF_PATH), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
+    else:
+        st.info("Gambar staf tidak ditemukan.")
+
     st.markdown("---")
 
     # Video profil (opsional)
-    vid_path = "video.mp4"
+    vid_path = VIDEO_PATH # Menggunakan path yang sudah didefinisikan
     if vid_path.exists():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.video(str(vid_path), start_time=0, format="video/mp4", width=350)
+            # PERBAIKAN: Menghapus width=350 agar menyesuaikan kolom
+            st.video(str(vid_path), start_time=0, format="video/mp4")
     else:
         st.info("Video profil belum tersedia.")
+
+# -------------------- HALAMAN: TENTANG KLINIK --------------------
+elif halaman == "Tentang Klinik":
+    st.title("🏥 Tentang Klinik Pratama Theresia")
+    st.write(
+        """
+        Klinik Pratama Theresia berkomitmen untuk memberikan pelayanan kesehatan 
+        yang terbaik dan terjangkau bagi masyarakat Kabupaten Nias Selatan. 
+        Kami melayani pasien umum maupun BPJS dengan sepenuh hati.
+        """
+    )
+    st.subheader("Visi Kami")
+    st.write("Menjadi klinik pilihan utama masyarakat dengan pelayanan yang profesional dan humanis.")
+    
+    st.subheader("Layanan Kami")
+    st.markdown("""
+    * Layanan Umum
+    * Layanan BPJS Kesehatan
+    * Pemeriksaan Dokter Umum
+    * Pengobatan dan Farmasi
+    """)
+    st.info("Untuk informasi lebih lanjut, silakan hubungi kontak kami.")
+
 # -------------------- HALAMAN ADMIN DASHBOARD --------------------
 elif halaman == "Admin Dashboard":
     password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
@@ -276,50 +322,78 @@ elif halaman == "Admin Dashboard":
 
     if password == ADMIN_PASSWORD:
         st.sidebar.success("Login Berhasil")
+        st.title("📊 Admin Dashboard Survei Kepuasan")
         df_responden, df_jawaban, df_saran = load_data_from_db()
 
         if df_responden.empty:
             st.info("Belum ada data survei yang masuk.")
         else:
+            # Filter Data Berdasarkan Tanggal
+            st.subheader("Filter Data")
+            col_start, col_end = st.columns(2)
+            min_date = pd.to_datetime(df_responden['tanggal']).dt.date.min()
+            max_date = pd.to_datetime(df_responden['tanggal']).dt.date.max()
+
+            with col_start:
+                start_date = st.date_input("Tanggal Mulai", value=min_date, min_value=min_date, max_value=max_date)
+            with col_end:
+                end_date = st.date_input("Tanggal Akhir", value=max_date, min_value=min_date, max_value=max_date)
+
+            df_responden['tanggal_date'] = pd.to_datetime(df_responden['tanggal']).dt.date
+
+            df_responden_filtered = df_responden[(df_responden['tanggal_date'] >= start_date) & 
+                                                 (df_responden['tanggal_date'] <= end_date)]
+            
+            # Mendapatkan ID responden yang sudah difilter
+            responden_ids = df_responden_filtered['id'].tolist()
+
+            # Filter data jawaban dan saran
+            df_jawaban_filtered = df_jawaban[df_jawaban['responden_id'].isin(responden_ids)]
+            df_saran_filtered = df_saran[df_saran['responden_id'].isin(responden_ids)]
+
+            st.markdown("---")
+            st.success(f"Menampilkan **{len(df_responden_filtered)}** Responden (dari total **{len(df_responden)}**)")
+
             # 1. Data Responden
             st.subheader("1. Data Responden")
-            st.info(f"Total Responden: {len(df_responden)}")
-            st.dataframe(df_responden, use_container_width=True)
+            st.dataframe(df_responden_filtered.drop(columns=["tanggal_date"]), use_container_width=True)
 
             # 2. Detail Jawaban
             st.subheader("2. Detail Semua Jawaban")
-            st.dataframe(df_jawaban, use_container_width=True)
+            st.dataframe(df_jawaban_filtered, use_container_width=True)
 
             # 3. Saran dan Masukan
             st.subheader("3. Saran dan Masukan")
-            st.dataframe(df_saran, use_container_width=True)
+            st.dataframe(df_saran_filtered, use_container_width=True)
 
             # 4. Data Gabungan
             st.subheader("4. Data Gabungan (Responden + Saran)")
-            if not df_saran.empty:
+            if not df_saran_filtered.empty:
                 df_gabung = pd.merge(
-                    df_responden,
-                    df_saran.drop(columns=["id"], errors="ignore"),
+                    df_responden_filtered.drop(columns=["tanggal_date"]),
+                    df_saran_filtered.drop(columns=["id"], errors="ignore"),
                     left_on="id", right_on="responden_id", how="left",
                 )
             else:
-                df_gabung = df_responden.copy()
+                df_gabung = df_responden_filtered.drop(columns=["tanggal_date"]).copy()
                 df_gabung["responden_id"] = np.nan
                 df_gabung["saran"] = np.nan
             st.dataframe(df_gabung, use_container_width=True)
 
             # 5. K-Means Clustering
             st.subheader("5. Analisis Kluster Sentimen (K-Means)")
-            df_cluster_data = prepare_cluster_data(df_jawaban)
+            df_cluster_data = prepare_cluster_data(df_jawaban_filtered)
             if df_cluster_data.shape[0] < 3:
-                st.info("Tidak cukup data responden (minimum 3) untuk clustering.")
+                st.info("Tidak cukup data responden (minimum 3) dalam rentang tanggal ini untuk clustering.")
             else:
                 try:
                     X = df_cluster_data[["skor_layanan","skor_keseluruhan"]]
-                    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10).fit(X)
+                    # Menghindari warning n_init pada scikit-learn versi terbaru
+                    kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto').fit(X) 
                     df_cluster_data["cluster"] = kmeans.labels_
 
                     centers = kmeans.cluster_centers_
+                    # Mengurutkan kluster berdasarkan skor rata-rata untuk memberi label sentimen
                     order = np.argsort(centers.mean(axis=1))
                     mapping = {order[0]:"Negatif/Kurang Puas", order[1]:"Netral", order[2]:"Positif/Puas"}
                     df_cluster_data["sentimen"] = df_cluster_data["cluster"].map(mapping).astype("category")
@@ -331,6 +405,7 @@ elif halaman == "Admin Dashboard":
                         labels={"skor_layanan":"Rata-rata Skor Layanan (Umum/BPJS)",
                                 "skor_keseluruhan":"Rata-rata Skor Keseluruhan"},
                         hover_data=["responden_id"],
+                        category_orders={"sentimen": ["Negatif/Kurang Puas", "Netral", "Positif/Puas"]}
                     )
                     centers_df = pd.DataFrame(centers, columns=["skor_layanan","skor_keseluruhan"])
                     centers_df["sentimen"] = [mapping[i] for i in range(3)]
@@ -348,9 +423,9 @@ elif halaman == "Admin Dashboard":
             # 6. Download Data
             st.subheader("6. Download Data Excel")
             excel_data = {
-                "Responden": df_responden,
-                "Detail Jawaban": df_jawaban,
-                "Saran Masukan": df_saran,
+                "Responden": df_responden_filtered.drop(columns=["tanggal_date"]),
+                "Detail Jawaban": df_jawaban_filtered,
+                "Saran Masukan": df_saran_filtered,
                 "Data Gabungan": df_gabung,
                 "Analisis Kluster": df_cluster_data,
             }
@@ -377,6 +452,3 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
-
-
-

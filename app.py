@@ -305,6 +305,17 @@ PLAKAT_PATH = BASE_DIR / "plakat.jpg"
 
 
 # -------------------- HALAMAN: TENTANG KLINIK --------------------
+# Perlu didefinisikan bersama dengan LOGO_PATH, STAF_PATH, VIDEO_PATH
+FTBERSAMA_PATH = BASE_DIR / "ftbersama.jpg"
+PENERIMA_PATH = BASE_DIR / "penerima.jpg"
+PIAGAM_PATH = BASE_DIR / "piagam.jpg"
+PLAKAT_PATH = BASE_DIR / "plakat.jpg"
+
+
+# ... (lanjutan dari kode sebelumnya, pastikan kode di atas ditambahkan di bagian definisi path)
+
+
+# -------------------- HALAMAN: TENTANG KLINIK --------------------
 elif halaman == "Tentang Klinik":
     st.title("🏥 Tentang Klinik Pratama Theresia")
 
@@ -326,6 +337,8 @@ elif halaman == "Tentang Klinik":
             st.image(str(PLAKAT_PATH), width=300, caption="Plakat Penghargaan")
             
     st.markdown("---") # Garis pemisah visual
+    
+    # Konten Teks
     st.write(
         """
         Klinik Pratama Theresia berkomitmen untuk memberikan pelayanan kesehatan 
@@ -482,4 +495,5 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+
 

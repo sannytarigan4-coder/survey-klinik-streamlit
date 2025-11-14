@@ -786,7 +786,7 @@ elif halaman == "Admin Dashboard":
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
             
-    st.markdown("---") # Garis pemisah visual
+
     
     # Konten Teks
     st.write(
@@ -945,4 +945,5 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+
 

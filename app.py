@@ -1,4 +1,4 @@
-# app.py — Versi Final yang Terstruktur dan Benar
+# app.py — Versi Final yang Terstruktur, Benar, dan Rapi
 
 import io
 import datetime
@@ -16,7 +16,7 @@ st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "survei_klinik.db"
 
-# ✅ DEFINISI SEMUA PATH FILE MEDIA SECARA GLOBAL (Penempatan Benar)
+# ✅ DEFINISI SEMUA PATH FILE MEDIA SECARA GLOBAL
 LOGO_PATH = BASE_DIR / "logo.jpeg"
 STAF_PATH = BASE_DIR / "staf.jpg"
 VIDEO_PATH = BASE_DIR / "video.mp4"
@@ -26,7 +26,7 @@ PIAGAM_PATH = BASE_DIR / "piagam.jpg"
 PLAKAT_PATH = BASE_DIR / "plakat.jpg"
 
 # -------------------- INISIALISASI SESSION STATE --------------------
-st.session_state.setdefault("halaman", "Formulir Survei")  # default halaman
+st.session_state.setdefault("halaman", "Formulir Survei")
 
 # -------------------- DATABASE SETUP --------------------
 def setup_database():
@@ -195,7 +195,7 @@ else:
 st.markdown("---")
 
 # -------------------- HALAMAN FORMULIR --------------------
-halaman = st.session_state.get("halaman", "Formulir Survei")  # memastikan tidak kosong
+halaman = st.session_state.get("halaman", "Formulir Survei")
 
 if halaman == "Formulir Survei":
     st.title("📝 Formulir Survei Kepuasan Pasien")
@@ -259,7 +259,7 @@ if halaman == "Formulir Survei":
 
     if submit:
         # Pastikan bagian layanan terisi semua
-        prefix = layanan[0].lower()  # 'u' atau 'b'
+        prefix = layanan[0].lower()
         semua_terisi = all((val is not None) for k, val in jawaban_dict.items() if k.startswith(prefix))
 
         if not nama or not semua_terisi:
@@ -289,7 +289,7 @@ elif halaman == "Beranda":
     st.markdown("---")
 
     # Video profil (opsional)
-    vid_path = VIDEO_PATH # Menggunakan path yang sudah didefinisikan
+    vid_path = VIDEO_PATH
     if vid_path.exists():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
@@ -297,38 +297,44 @@ elif halaman == "Beranda":
     else:
         st.info("Video profil belum tersedia.")
 
-# -------------------- HALAMAN: TENTANG KLINIK (Foto Dirapikan) --------------------
+# -------------------- HALAMAN: TENTANG KLINIK (Sudah Dirapikan) --------------------
 elif halaman == "Tentang Klinik":
     st.title("🏥 Tentang Klinik Pratama Theresia")
 
-    # BARIS BARU: Menampilkan 4 Gambar dalam satu baris dengan kolom yang proporsional
+    # Menggunakan st.container() dan st.columns(4) untuk Galeri
     st.subheader("Galeri Dokumentasi")
+    
+    # 🌟 PERBAIKAN: Menggunakan use_container_width=True untuk menyesuaikan lebar gambar secara responsif
     col1, col2, col3, col4 = st.columns(4) 
-
+    
+    # Menempatkan gambar
     with col1:
         if FTBERSAMA_PATH.exists():
-            st.image(str(FTBERSAMA_PATH), width=300, caption="Foto Bersama Staf dan Tim")
+            st.image(str(FTBERSAMA_PATH), use_container_width=True, caption="Foto Bersama Staf dan Tim")
         else:
             st.caption("ftbersama.jpg tidak ditemukan")
     with col2:
         if PENERIMA_PATH.exists():
-            st.image(str(PENERIMA_PATH), width=300, caption="Penerimaan Penghargaan")
+            st.image(str(PENERIMA_PATH), use_container_width=True, caption="Penerimaan Penghargaan")
         else:
             st.caption("penerima.jpg tidak ditemukan")
     with col3:
         if PIAGAM_PATH.exists():
-            st.image(str(PIAGAM_PATH), width=300, caption="Piagam Penghargaan Klinik")
+            st.image(str(PIAGAM_PATH), use_container_width=True, caption="Piagam Penghargaan Klinik")
         else:
             st.caption("piagam.jpg tidak ditemukan")
     with col4:
         if PLAKAT_PATH.exists():
-            st.image(str(PLAKAT_PATH), width=300, caption="Plakat Kenang-kenangan")
+            st.image(str(PLAKAT_PATH), use_container_width=True, caption="Plakat Kenang-kenangan")
         else:
             st.caption("plakat.jpg tidak ditemukan")
             
-    st.markdown("---") # Garis pemisah visual
+    # 🌟 PERBAIKAN: Menambah spasi vertikal dan garis pemisah yang jelas
+    st.markdown("##") # Tambahan spasi vertikal
+    st.markdown("---") 
     
     # Konten Teks
+    st.subheader("Visi dan Misi")
     st.write(
         """
         Klinik Pratama Theresia berkomitmen untuk memberikan pelayanan kesehatan 
@@ -336,8 +342,7 @@ elif halaman == "Tentang Klinik":
         Kami melayani pasien umum maupun BPJS dengan sepenuh hati.
         """
     )
-    st.subheader("Visi Kami")
-    st.write("Menjadi klinik pilihan utama masyarakat dengan pelayanan yang profesional dan humanis.")
+    st.write("**Visi Kami:** Menjadi klinik pilihan utama masyarakat dengan pelayanan yang profesional dan humanis.")
     
     st.subheader("Layanan Kami")
     st.markdown("""

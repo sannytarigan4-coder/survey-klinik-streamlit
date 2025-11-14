@@ -1,4 +1,4 @@
-# app.py — Perbaikan dan Penambahan Dashboard Admin
+# app.py — Versi Final yang Terstruktur dan Benar
 
 import io
 import datetime
@@ -16,10 +16,15 @@ st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "survei_klinik.db"
 
-# PENAMBAHAN: DEFINISI PATH FILE MEDIA
+# ✅ PENEMPATAN BENAR: DEFINISI SEMUA PATH FILE MEDIA SECARA GLOBAL
 LOGO_PATH = BASE_DIR / "logo.jpeg"
 STAF_PATH = BASE_DIR / "staf.jpg"
 VIDEO_PATH = BASE_DIR / "video.mp4"
+FTBERSAMA_PATH = BASE_DIR / "ftbersama.jpg"
+PENERIMA_PATH = BASE_DIR / "penerima.jpg"
+PIAGAM_PATH = BASE_DIR / "piagam.jpg"
+PLAKAT_PATH = BASE_DIR / "plakat.jpg"
+
 # -------------------- INISIALISASI SESSION STATE --------------------
 st.session_state.setdefault("halaman", "Formulir Survei")  # default halaman
 
@@ -294,28 +299,6 @@ elif halaman == "Beranda":
         st.info("Video profil belum tersedia.")
 
 # -------------------- HALAMAN: TENTANG KLINIK --------------------
-# Perlu didefinisikan bersama dengan LOGO_PATH, STAF_PATH, VIDEO_PATH
-FTBERSAMA_PATH = BASE_DIR / "ftbersama.jpg"
-PENERIMA_PATH = BASE_DIR / "penerima.jpg"
-PIAGAM_PATH = BASE_DIR / "piagam.jpg"
-PLAKAT_PATH = BASE_DIR / "plakat.jpg"
-
-
-# ... (lanjutan dari kode sebelumnya, pastikan kode di atas ditambahkan di bagian definisi path)
-
-
-# -------------------- HALAMAN: TENTANG KLINIK --------------------
-# Perlu didefinisikan bersama dengan LOGO_PATH, STAF_PATH, VIDEO_PATH
-FTBERSAMA_PATH = BASE_DIR / "ftbersama.jpg"
-PENERIMA_PATH = BASE_DIR / "penerima.jpg"
-PIAGAM_PATH = BASE_DIR / "piagam.jpg"
-PLAKAT_PATH = BASE_DIR / "plakat.jpg"
-
-
-# ... (lanjutan dari kode sebelumnya, pastikan kode di atas ditambahkan di bagian definisi path)
-
-
-# -------------------- HALAMAN: TENTANG KLINIK --------------------
 elif halaman == "Tentang Klinik":
     st.title("🏥 Tentang Klinik Pratama Theresia")
 
@@ -326,15 +309,23 @@ elif halaman == "Tentang Klinik":
         # Menggunakan Path baru dan menyesuaikan ukuran width
         if FTBERSAMA_PATH.exists():
             st.image(str(FTBERSAMA_PATH), width=300, caption="Foto Bersama Staf")
+        else:
+            st.caption("ftbersama.jpg tidak ditemukan")
     with col2:
         if PENERIMA_PATH.exists():
             st.image(str(PENERIMA_PATH), width=300, caption="Prosesi Penerimaan")
+        else:
+            st.caption("penerima.jpg tidak ditemukan")
     with col3:
         if PIAGAM_PATH.exists():
             st.image(str(PIAGAM_PATH), width=300, caption="Piagam Penghargaan")
+        else:
+            st.caption("piagam.jpg tidak ditemukan")
     with col4:
         if PLAKAT_PATH.exists():
             st.image(str(PLAKAT_PATH), width=300, caption="Plakat Penghargaan")
+        else:
+            st.caption("plakat.jpg tidak ditemukan")
             
     st.markdown("---") # Garis pemisah visual
     
@@ -495,5 +486,3 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
-
-

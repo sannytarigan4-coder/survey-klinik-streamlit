@@ -256,6 +256,19 @@ if halaman == "Formulir Survei":
                 st.session_state.halaman = "Beranda"
                 st.rerun()
 
+# -------------------- HALAMAN: BERANDA -----------------------
+elif halaman == "Beranda":
+    st.image(asset_path("staf.jpg"), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
+    st.markdown("---")
+
+    # Video profil (opsional)
+    vid_path = ASSETS / "video.mp4"
+    if vid_path.exists():
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.video(str(vid_path), start_time=0, format="video/mp4", width=350)
+    else:
+        st.info("Video profil belum tersedia.")
 # -------------------- HALAMAN ADMIN DASHBOARD --------------------
 elif halaman == "Admin Dashboard":
     password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
@@ -364,4 +377,5 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+
 

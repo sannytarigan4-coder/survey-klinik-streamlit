@@ -375,6 +375,7 @@ elif halaman == "Admin Dashboard":
             with col_start:
                 start_date = st.date_input("Tanggal Mulai", value=min_date, min_value=min_date, max_value=max_date)
             with col_end:
+                # Set tanggal akhir agar tidak lebih kecil dari tanggal mulai
                 end_date = st.date_input("Tanggal Akhir", value=max_date, min_value=start_date, max_value=max_date)
 
             df_responden['tanggal_date'] = pd.to_datetime(df_responden['tanggal']).dt.date
@@ -491,4 +492,5 @@ elif halaman == "Admin Dashboard":
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+
 

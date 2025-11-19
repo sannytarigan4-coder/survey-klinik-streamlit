@@ -351,7 +351,8 @@ elif halaman == "Tentang Klinik":
     """)
     st.info("Untuk informasi lebih lanjut, silakan hubungi kontak kami.")
 
-# -------------------- HALAMAN: ADMIN DASHBOARD --------------------
+# --------------- HALAMAN: ADMIN DASHBOARD ---------------
+
 elif halaman == "Admin Dashboard":
     password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
     ADMIN_PASSWORD = "kliniktheresia"
@@ -370,13 +371,15 @@ elif halaman == "Admin Dashboard":
             min_date = pd.to_datetime(df_responden['tanggal']).dt.date.min()
             max_date = pd.to_datetime(df_responden['tanggal']).dt.date.max()
 
+            # Pastikan tanggal mulai dan tanggal akhir dapat dipilih dengan valid
             with col_start:
                 start_date = st.date_input("Tanggal Mulai", value=min_date, min_value=min_date, max_value=max_date)
             with col_end:
-                end_date = st.date_input("Tanggal Akhir", value=max_date, min_value=min_date, max_value=max_date)
+                end_date = st.date_input("Tanggal Akhir", value=max_date, min_value=start_date, max_value=max_date)
 
             df_responden['tanggal_date'] = pd.to_datetime(df_responden['tanggal']).dt.date
 
+            # Pastikan data terfilter berdasarkan rentang tanggal yang benar
             df_responden_filtered = df_responden[(df_responden['tanggal_date'] >= start_date) & 
                                                  (df_responden['tanggal_date'] <= end_date)]
             
@@ -484,6 +487,8 @@ elif halaman == "Admin Dashboard":
         st.sidebar.warning("Masukkan password admin di sidebar untuk melihat dashboard.")
         st.info("Halaman ini dilindungi password.")
 
+
 # -------------------- FOOTER -------------------
 st.markdown("---")
 st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")
+

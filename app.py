@@ -1,5 +1,3 @@
-# app.py — Versi Final yang Terstruktur, Benar, dan Rapi
-
 import io
 import datetime
 import sqlite3
@@ -95,15 +93,20 @@ def extract_data_from_radio(radio_val):
 
 def simpan_ke_db(nama, jk, usia, layanan, semua_jawaban, saran):
     try:
+        if not nama or not semua_jawaban:
+            raise ValueError("Nama atau jawaban belum lengkap.")
+        
         conn = sqlite3.connect(str(DB_PATH))
         c = conn.cursor()
 
+        # Memasukkan data responden
         c.execute(
             "INSERT INTO responden (nama, jenis_kelamin, usia, layanan) VALUES (?, ?, ?, ?)",
             (nama, jk, usia, layanan),
         )
         rid = c.lastrowid
 
+        # Memasukkan jawaban
         for k, v in semua_jawaban.items():
             if v:
                 teks, skor = extract_data_from_radio(v)
@@ -112,6 +115,7 @@ def simpan_ke_db(nama, jk, usia, layanan, semua_jawaban, saran):
                     (rid, k, teks, skor),
                 )
 
+        # Memasukkan saran
         if saran:
             c.execute(
                 "INSERT INTO saran_masukan (responden_id, saran) VALUES (?, ?)",
@@ -122,6 +126,9 @@ def simpan_ke_db(nama, jk, usia, layanan, semua_jawaban, saran):
         return True
     except sqlite3.Error as e:
         st.error(f"DB error: {e}")
+        return False
+    except ValueError as ve:
+        st.error(f"Error: {ve}")
         return False
     finally:
         try: conn.close()
@@ -138,7 +145,8 @@ def generate_excel(dataframes_dict):
 def load_data_from_db():
     conn = sqlite3.connect(str(DB_PATH))
     try:
-        df_responden = pd.read_sql_query("SELECT * FROM responden ORDER BY id DESC", conn)
+        # Menampilkan tanggal dengan format yang sesuai
+        df_responden = pd.read_sql_query("SELECT *, DATE(tanggal) as tanggal_date FROM responden ORDER BY id DESC", conn)
         df_jawaban   = pd.read_sql_query("SELECT * FROM jawaban ORDER BY responden_id DESC, id ASC", conn)
         df_saran     = pd.read_sql_query("SELECT * FROM saran_masukan ORDER BY responden_id DESC", conn)
         return df_responden, df_jawaban, df_saran
@@ -280,15 +288,12 @@ if halaman == "Formulir Survei":
 
 # -------------------- HALAMAN: BERANDA -----------------------
 elif halaman == "Beranda":
-    # Menggunakan STAF_PATH
     if STAF_PATH.exists():
         st.image(str(STAF_PATH), use_container_width=True, caption="Dokter, Staff, dan Jajaran")
     else:
         st.info("Gambar staf tidak ditemukan.")
-
+    
     st.markdown("---")
-
-    # Video profil (opsional)
     vid_path = VIDEO_PATH
     if vid_path.exists():
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -296,197 +301,3 @@ elif halaman == "Beranda":
             st.video(str(vid_path), start_time=0, format="video/mp4")
     else:
         st.info("Video profil belum tersedia.")
-
-# -------------------- HALAMAN: TENTANG KLINIK (Sudah Dirapikan) --------------------
-elif halaman == "Tentang Klinik":
-    st.title("🏥 Tentang Klinik Pratama Theresia")
-
-    # Menggunakan st.container() dan st.columns(4) untuk Galeri
-    st.subheader("Galeri Dokumentasi")
-    
-    # 🌟 PERBAIKAN: Menggunakan use_container_width=True untuk menyesuaikan lebar gambar secara responsif
-    col1, col2, col3, col4 = st.columns(4) 
-    
-    # Menempatkan gambar
-    with col1:
-        if FTBERSAMA_PATH.exists():
-            st.image(str(FTBERSAMA_PATH), use_container_width=True, caption="Foto Bersama Staf dan Tim")
-        else:
-            st.caption("ftbersama.jpg tidak ditemukan")
-    with col2:
-        if PENERIMA_PATH.exists():
-            st.image(str(PENERIMA_PATH), use_container_width=True, caption="Penerimaan Penghargaan")
-        else:
-            st.caption("penerima.jpg tidak ditemukan")
-    with col3:
-        if PIAGAM_PATH.exists():
-            st.image(str(PIAGAM_PATH), use_container_width=True, caption="Piagam Penghargaan Klinik")
-        else:
-            st.caption("piagam.jpg tidak ditemukan")
-    with col4:
-        if PLAKAT_PATH.exists():
-            st.image(str(PLAKAT_PATH), use_container_width=True, caption="Plakat Kenang-kenangan")
-        else:
-            st.caption("plakat.jpg tidak ditemukan")
-            
-    # 🌟 PERBAIKAN: Menambah spasi vertikal dan garis pemisah yang jelas
-    st.markdown("##") # Tambahan spasi vertikal
-    st.markdown("---") 
-    
-    # Konten Teks
-    st.subheader("Visi dan Misi")
-    st.write(
-        """
-        Klinik Pratama Theresia berkomitmen untuk memberikan pelayanan kesehatan 
-        yang terbaik dan terjangkau bagi masyarakat Kabupaten Nias Selatan. 
-        Kami melayani pasien umum maupun BPJS dengan sepenuh hati.
-        """
-    )
-    st.write("**Visi Kami:** Menjadi klinik pilihan utama masyarakat dengan pelayanan yang profesional dan humanis.")
-    
-    st.subheader("Layanan Kami")
-    st.markdown("""
-    * Layanan Umum
-    * Layanan BPJS Kesehatan
-    * Pemeriksaan Dokter Umum
-    * Pengobatan dan Farmasi
-    """)
-    st.info("Untuk informasi lebih lanjut, silakan hubungi kontak kami.")
-
-# -------------------- HALAMAN ADMIN DASHBOARD --------------------
-elif halaman == "Admin Dashboard":
-    password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
-    ADMIN_PASSWORD = "kliniktheresia"
-
-    if password == ADMIN_PASSWORD:
-        st.sidebar.success("Login Berhasil")
-        st.title("📊 Admin Dashboard Survei Kepuasan")
-        df_responden, df_jawaban, df_saran = load_data_from_db()
-
-        if df_responden.empty:
-            st.info("Belum ada data survei yang masuk.")
-        else:
-            # Filter Data Berdasarkan Tanggal
-            st.subheader("Filter Data")
-            col_start, col_end = st.columns(2)
-            min_date = pd.to_datetime(df_responden['tanggal']).dt.date.min()
-            max_date = pd.to_datetime(df_responden['tanggal']).dt.date.max()
-
-            with col_start:
-                start_date = st.date_input("Tanggal Mulai", value=min_date, min_value=min_date, max_value=max_date)
-            with col_end:
-                end_date = st.date_input("Tanggal Akhir", value=max_date, min_value=min_date, max_value=max_date)
-
-            df_responden['tanggal_date'] = pd.to_datetime(df_responden['tanggal']).dt.date
-
-            df_responden_filtered = df_responden[(df_responden['tanggal_date'] >= start_date) & 
-                                                 (df_responden['tanggal_date'] <= end_date)]
-            
-            # Mendapatkan ID responden yang sudah difilter
-            responden_ids = df_responden_filtered['id'].tolist()
-
-            # Filter data jawaban dan saran
-            df_jawaban_filtered = df_jawaban[df_jawaban['responden_id'].isin(responden_ids)]
-            df_saran_filtered = df_saran[df_saran['responden_id'].isin(responden_ids)]
-
-            st.markdown("---")
-            st.success(f"Menampilkan **{len(df_responden_filtered)}** Responden (dari total **{len(df_responden)}**)")
-
-            # 1. Data Responden
-            st.subheader("1. Data Responden")
-            st.dataframe(df_responden_filtered.drop(columns=["tanggal_date"]), use_container_width=True)
-
-            # 2. Detail Jawaban
-            st.subheader("2. Detail Semua Jawaban")
-            st.dataframe(df_jawaban_filtered, use_container_width=True)
-
-            # 3. Saran dan Masukan
-            st.subheader("3. Saran dan Masukan")
-            st.dataframe(df_saran_filtered, use_container_width=True)
-
-            # 4. Data Gabungan
-            st.subheader("4. Data Gabungan (Responden + Saran)")
-            if not df_saran_filtered.empty:
-                df_gabung = pd.merge(
-                    df_responden_filtered.drop(columns=["tanggal_date"]),
-                    df_saran_filtered.drop(columns=["id"], errors="ignore"),
-                    left_on="id", right_on="responden_id", how="left",
-                )
-            else:
-                df_gabung = df_responden_filtered.drop(columns=["tanggal_date"]).copy()
-                df_gabung["responden_id"] = np.nan
-                df_gabung["saran"] = np.nan
-            st.dataframe(df_gabung, use_container_width=True)
-
-            # 5. K-Means Clustering
-            st.subheader("5. Analisis Kluster Sentimen (K-Means)")
-            df_cluster_data = prepare_cluster_data(df_jawaban_filtered)
-            if df_cluster_data.shape[0] < 3:
-                st.info("Tidak cukup data responden (minimum 3) dalam rentang tanggal ini untuk clustering.")
-            else:
-                try:
-                    X = df_cluster_data[["skor_layanan","skor_keseluruhan"]]
-                    # Menghindari warning n_init pada scikit-learn versi terbaru
-                    kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto').fit(X) 
-                    df_cluster_data["cluster"] = kmeans.labels_
-
-                    centers = kmeans.cluster_centers_
-                    # Mengurutkan kluster berdasarkan skor rata-rata untuk memberi label sentimen
-                    order = np.argsort(centers.mean(axis=1))
-                    mapping = {order[0]:"Negatif/Kurang Puas", order[1]:"Netral", order[2]:"Positif/Puas"}
-                    df_cluster_data["sentimen"] = df_cluster_data["cluster"].map(mapping).astype("category")
-
-                    fig = px.scatter(
-                        df_cluster_data,
-                        x="skor_layanan", y="skor_keseluruhan",
-                        color="sentimen", title="Kluster Sentimen Responden",
-                        labels={"skor_layanan":"Rata-rata Skor Layanan (Umum/BPJS)",
-                                "skor_keseluruhan":"Rata-rata Skor Keseluruhan"},
-                        hover_data=["responden_id"],
-                        category_orders={"sentimen": ["Negatif/Kurang Puas", "Netral", "Positif/Puas"]}
-                    )
-                    centers_df = pd.DataFrame(centers, columns=["skor_layanan","skor_keseluruhan"])
-                    centers_df["sentimen"] = [mapping[i] for i in range(3)]
-                    fig.add_scatter(
-                        x=centers_df["skor_layanan"], y=centers_df["skor_keseluruhan"],
-                        mode="markers", marker=dict(color="black", size=15, symbol="cross"),
-                        name="Pusat Kluster",
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                    st.markdown("#### Detail Data Kluster")
-                    st.dataframe(df_cluster_data, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Terjadi error saat visualisasi K-Means: {e}")
-
-            # 6. Download Data
-            st.subheader("6. Download Data Excel")
-            excel_data = {
-                "Responden": df_responden_filtered.drop(columns=["tanggal_date"]),
-                "Detail Jawaban": df_jawaban_filtered,
-                "Saran Masukan": df_saran_filtered,
-                "Data Gabungan": df_gabung,
-                "Analisis Kluster": df_cluster_data,
-            }
-            try:
-                excel_bytes = generate_excel(excel_data)
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-                st.download_button(
-                    "📥 Download Data (Excel)",
-                    data=excel_bytes,
-                    file_name=f"hasil_survei_klinik_{timestamp}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-            except Exception as e:
-                st.error(f"Gagal membuat file Excel: {e}")
-
-    elif password:   # jika password salah
-        st.sidebar.error("Password salah. Coba lagi.")
-        st.warning("Silakan masukkan password yang benar untuk melihat data.")
-    else:
-        st.sidebar.warning("Masukkan password admin di sidebar untuk melihat dashboard.")
-        st.info("Halaman ini dilindungi password.")
-
-
-# -------------------- FOOTER -------------------
-st.markdown("---")
-st.caption("© 2025 Klinik Pratama Theresia Kabupaten Nias Selatan")

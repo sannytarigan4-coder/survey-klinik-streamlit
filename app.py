@@ -191,7 +191,7 @@ with st.sidebar:
     for page in menu_pages:
         if st.button(page, key=f"nav_{page}", use_container_width=True):
             st.session_state.halaman = page
-            st.rerun()
+            st.rerun()  # Pastikan halaman dirender ulang
 
 # -------------------- HEADER --------------------
 # Menggunakan LOGO_PATH
@@ -301,3 +301,90 @@ elif halaman == "Beranda":
             st.video(str(vid_path), start_time=0, format="video/mp4")
     else:
         st.info("Video profil belum tersedia.")
+
+# -------------------- HALAMAN: TENTANG KLINIK --------------------
+elif halaman == "Tentang Klinik":
+    st.title("🏥 Tentang Klinik Pratama Theresia")
+
+    st.subheader("Galeri Dokumentasi")
+    col1, col2, col3, col4 = st.columns(4) 
+    
+    # Menempatkan gambar
+    with col1:
+        if FTBERSAMA_PATH.exists():
+            st.image(str(FTBERSAMA_PATH), use_container_width=True, caption="Foto Bersama Staf dan Tim")
+        else:
+            st.caption("ftbersama.jpg tidak ditemukan")
+    with col2:
+        if PENERIMA_PATH.exists():
+            st.image(str(PENERIMA_PATH), use_container_width=True, caption="Penerimaan Penghargaan")
+        else:
+            st.caption("penerima.jpg tidak ditemukan")
+    with col3:
+        if PIAGAM_PATH.exists():
+            st.image(str(PIAGAM_PATH), use_container_width=True, caption="Piagam Penghargaan Klinik")
+        else:
+            st.caption("piagam.jpg tidak ditemukan")
+    with col4:
+        if PLAKAT_PATH.exists():
+            st.image(str(PLAKAT_PATH), use_container_width=True, caption="Plakat Kenang-kenangan")
+        else:
+            st.caption("plakat.jpg tidak ditemukan")
+
+    st.markdown("##") 
+    st.markdown("---") 
+    
+    st.subheader("Visi dan Misi")
+    st.write("""
+        Klinik Pratama Theresia berkomitmen untuk memberikan pelayanan kesehatan
+        yang terbaik dan terjangkau bagi masyarakat Kabupaten Nias Selatan. 
+        Kami melayani pasien umum maupun BPJS dengan sepenuh hati.
+    """)
+    st.write("**Visi Kami:** Menjadi klinik pilihan utama masyarakat dengan pelayanan yang profesional dan humanis.")
+    
+    st.subheader("Layanan Kami")
+    st.markdown("""
+        * Layanan Umum
+        * Layanan BPJS Kesehatan
+        * Pemeriksaan Dokter Umum
+        * Pengobatan dan Farmasi
+    """)
+    st.info("Untuk informasi lebih lanjut, silakan hubungi kontak kami.")
+
+# -------------------- HALAMAN: ADMIN DASHBOARD --------------------
+elif halaman == "Admin Dashboard":
+    password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
+    ADMIN_PASSWORD = "kliniktheresia"
+
+    if password == ADMIN_PASSWORD:
+        st.sidebar.success("Login Berhasil")
+        st.title("📊 Admin Dashboard Survei Kepuasan")
+        df_responden, df_jawaban, df_saran = load_data_from_db()
+
+        if df_responden.empty:
+            st.info("Belum ada data survei yang masuk.")
+        else:
+            # Filter Data Berdasarkan Tanggal
+            st.subheader("Filter Data")
+            col_start, col_end = st.columns(2)
+            min_date = pd.to_datetime(df_responden['tanggal']).dt.date.min()
+            max_date = pd.to_datetime(df_responden['tanggal']).dt.date.max()
+
+            with col_start:
+                start_date = st.date_input("Tanggal Mulai", value=min_date, min_value=min_date, max_value=max_date)
+            with col_end:
+                end_date = st.date_input("Tanggal Akhir", value=max_date, min_value=min_date, max_value=max_date)
+
+            df_responden['tanggal_date'] = pd.to_datetime(df_responden['tanggal']).dt.date
+
+            df_responden_filtered = df_responden[(df_responden['tanggal_date'] >= start_date) & 
+                                                 (df_responden['tanggal_date'] <= end_date)]
+            
+            # Mendapatkan ID responden yang sudah difilter
+            responden_ids = df_responden_filtered['id'].tolist()
+
+            # Filter data jawaban dan saran
+            df_jawaban_filtered = df_jawaban[df_jawaban['responden_id'].isin(responden_ids)]
+            df_saran_filtered = df_saran[df_saran['responden_id'].isin(responden_ids)]
+
+            st.markdown("---

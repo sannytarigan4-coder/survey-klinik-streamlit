@@ -405,12 +405,20 @@ elif halaman == "Tentang Klinik":
             yang diserahkan oleh Kepala BPJS Cabang Gunung Sitoli
         </div>
     """, unsafe_allow_html=True)
-
-    st.markdown("""
+st.markdown("""
 Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan pelayanan medis berkualitas tinggi dengan pendekatan yang ramah dan profesional.
 
 *Visi:* Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
 
-*Misi
-"")
+*Misi:*
+- Memberikan pelayanan medis yang cepat, tepat, dan terpercaya.
+- Menjaga kenyamanan dan keamanan pasien.
+- Meningkatkan kualitas hidup masyarakat melalui edukasi kesehatan.
+
+---
+*Informasi Kontak:*  
+📍 *Lokasi:* Jl. Imam Bonjol No.10, Kel. Pasar Teluk Dalam, Kab. Nias Selatan, Prov. Sumatera Utara  
+📞 *Telepon:* 0852-1012-5773  
+📧 *Email:* info@kliniktheresia.id
+""")
 

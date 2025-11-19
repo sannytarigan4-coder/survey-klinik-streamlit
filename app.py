@@ -355,6 +355,134 @@ elif halaman == "Tentang Klinik":
             yang diserahkan oleh Kepala BPJS Cabang Gunung Sitoli
         </div>
     """, unsafe_allow_html=True)
+    # -------------------- HALAMAN: ADMIN DASHBOARD ----------------
+elif halaman == "Admin Dashboard":
+    st.title("📊 Admin Dashboard - Hasil Survei")
+
+    # Input password for admin access
+    password = st.sidebar.text_input("Masukkan Password Admin", type="password", key="admin_pass")
+    ADMIN_PASSWORD = "kliniktheresia"  # You can modify this as per your requirement
+
+    if password == ADMIN_PASSWORD:
+        st.sidebar.success("Login Berhasil")
+
+        # Load data from the database
+        df_responden, df_jawaban, df_saran = load_data_from_db()
+
+        if df_responden.empty:
+            st.info("Belum ada data survei yang masuk.")
+        else:
+            # 1) Data Responden
+            st.subheader("1. Data Responden")
+            st.info(f"Total Responden: {len(df_responden)}")
+            st.dataframe(df_responden, use_container_width=True)
+
+            # 2) Detail Jawaban
+            st.subheader("2. Detail Semua Jawaban")
+            st.dataframe(df_jawaban, use_container_width=True)
+
+            # 3) Saran
+            st.subheader("3. Saran dan Masukan")
+            st.dataframe(df_saran, use_container_width=True)
+
+            # 4) Data Gabungan
+            st.subheader("4. Data Gabungan (Responden + Saran)")
+            if not df_saran.empty:
+                df_gabung = pd.merge(
+                    df_responden,
+                    df_saran.drop(columns=["id"], errors="ignore"),
+                    left_on="id",
+                    right_on="responden_id",
+                    how="left",
+                )
+            else:
+                df_gabung = df_responden.copy()
+                df_gabung["responden_id"] = np.nan
+                df_gabung["saran"] = np.nan
+            st.dataframe(df_gabung, use_container_width=True)
+
+            # 5) K-Means Clustering
+            st.subheader("5. Analisis Kluster Sentimen (K-Means)")
+            df_cluster_data = prepare_cluster_data(df_jawaban)
+
+            if df_cluster_data.shape[0] < 3:
+                st.info("Tidak cukup data responden (minimum 3) untuk melakukan clustering.")
+                df_cluster_data = pd.DataFrame()
+            else:
+                try:
+                    X = df_cluster_data[["skor_layanan", "skor_keseluruhan"]]
+                    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10).fit(X)
+                    df_cluster_data["cluster"] = kmeans.labels_
+
+                    centers = kmeans.cluster_centers_
+                    center_means = centers.mean(axis=1)
+                    order = np.argsort(center_means)
+                    mapping = {
+                        order[0]: "Negatif/Kurang Puas",
+                        order[1]: "Netral",
+                        order[2]: "Positif/Puas",
+                    }
+                    df_cluster_data["sentimen"] = df_cluster_data["cluster"].map(mapping).astype("category")
+
+                    st.markdown("#### Visualisasi Kluster Sentimen")
+                    fig = px.scatter(
+                        df_cluster_data,
+                        x="skor_layanan",
+                        y="skor_keseluruhan",
+                        color="sentimen",
+                        title="Kluster Sentimen Responden",
+                        labels={"skor_layanan": "Rata-rata Skor Layanan (Umum/BPJS)", "skor_keseluruhan": "Rata-rata Skor Keseluruhan"},
+                        hover_data=["responden_id"],
+                    )
+
+                    # Tambahkan pusat cluster
+                    centers_df = pd.DataFrame(centers, columns=["skor_layanan", "skor_keseluruhan"])
+                    centers_df["sentimen"] = [mapping[i] for i in range(3)]
+                    fig.add_scatter(
+                        x=centers_df["skor_layanan"],
+                        y=centers_df["skor_keseluruhan"],
+                        mode="markers",
+                        marker=dict(color="black", size=15, symbol="cross"),
+                        name="Pusat Kluster",
+                    )
+
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.markdown("#### Detail Data Kluster")
+                    st.dataframe(df_cluster_data, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Terjadi error saat visualisasi K-Means: {e}")
+                    df_cluster_data = pd.DataFrame()
+
+            # 6) Download Excel
+            st.subheader("6. Download Data Excel")
+            st.info("Klik tombol di bawah untuk mengunduh semua data dalam satu file Excel.")
+            excel_data_dict = {
+                "Responden": df_responden,
+                "Detail Jawaban": df_jawaban,
+                "Saran Masukan": df_saran,
+                "Data Gabungan": df_gabung,
+                "Analisis Kluster": df_cluster_data,
+            }
+            try:
+                excel_bytes = generate_excel(excel_data_dict)
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+                file_name = f"hasil_survei_klinik_{timestamp}.xlsx"
+                st.download_button(
+                    label="📥 Download Data (Excel)",
+                    data=excel_bytes,
+                    file_name=file_name,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            except Exception as e:
+                st.error(f"Gagal membuat file Excel: {e}")
+
+    elif password:  # password diisi tapi salah
+        st.sidebar.error("Password salah. Coba lagi.")
+        st.warning("Silakan masukkan password yang benar untuk melihat data.")
+    else:
+        st.sidebar.warning("Silakan masukkan password admin di sidebar untuk melihat dashboard.")
+        st.info("Halaman ini dilindungi password.")
+
     
     st.markdown("""
 Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan pelayanan medis berkualitas tinggi dengan pendekatan yang ramah dan profesional.
@@ -372,3 +500,4 @@ Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan p
 📞 *Telepon:* 0852-1012-5773  
 📧 *Email:* info@kliniktheresia.id
 """)
+

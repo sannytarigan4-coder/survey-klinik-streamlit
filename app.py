@@ -412,4 +412,5 @@ Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan p
 *Visi:* Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
 
 *Misi
+"")
 

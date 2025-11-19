@@ -13,9 +13,8 @@ import plotly.express as px
 st.set_page_config(page_title="Survei Klinik Theresia", layout="wide")
 
 # -------------------- PATH ABSOLUT PROYEK --------------------
-BASE_DIR = Path(__file__).resolve().parent
-ASSETS = BASE_DIR / "assets"
-DB_PATH = BASE_DIR / "survei_klinik.db"
+BASE_DIR = Path(__file__).resolve().parent  # Lokasi file script Python
+DB_PATH = BASE_DIR / "survei_klinik.db"  # Nama file database yang ada di folder yang sama
 
 def asset_path(name: str) -> str:
     """
@@ -413,3 +412,4 @@ Klinik Pratama Theresia adalah fasilitas kesehatan yang berkomitmen memberikan p
 *Visi:* Menjadi klinik pilihan utama masyarakat dalam pelayanan kesehatan.
 
 *Misi
+
